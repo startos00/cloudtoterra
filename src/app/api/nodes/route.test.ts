@@ -50,4 +50,16 @@ describe('POST /api/nodes', () => {
     }))
     expect(res.status).toBe(400)
   })
+
+  it('rate-limits a single IP after the window max', async () => {
+    const { POST } = await import('./route')
+    const body = { type: 'building', subType: 'commercial_office', nodeName: 'Mill', latitude: 1, longitude: 1 }
+    const headers = { 'x-forwarded-for': '7.7.7.7' }
+    for (let i = 0; i < 10; i++) {
+      const r = await POST(new Request('http://x/api/nodes', { method: 'POST', body: JSON.stringify(body), headers }))
+      expect(r.status).toBe(201)
+    }
+    const over = await POST(new Request('http://x/api/nodes', { method: 'POST', body: JSON.stringify(body), headers }))
+    expect(over.status).toBe(429)
+  })
 })

@@ -31,4 +31,19 @@ describe('nodes data-access', () => {
     expect(await listVisible(db, { type: 'land' })).toHaveLength(0)
     expect(await listVisible(db, { type: 'building' })).toHaveLength(1)
   })
+  it('rejected stays hidden', async () => {
+    const { db } = await makeTestDb()
+    const n = await createNode(db, { ...sub })
+    await setStatus(db, n.id, 'rejected')
+    expect((await getNode(db, n.id))?.isVisible).toBe(false)
+    expect(await listVisible(db, {})).toHaveLength(0)
+  })
+  it('listAll filters by status', async () => {
+    const { db } = await makeTestDb()
+    const a = await createNode(db, { ...sub })
+    await setStatus(db, a.id, 'approved')
+    await createNode(db, { ...sub }) // pending
+    expect(await listAll(db, { status: 'pending' })).toHaveLength(1)
+    expect(await listAll(db, { status: 'approved' })).toHaveLength(1)
+  })
 })
