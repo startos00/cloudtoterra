@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { makeTestDb } from '@/test/pg'
+import type { Db } from '@/lib/db'
 
-let testDb: any
+let testDb: Db
 vi.mock('@/lib/db', () => ({ get db() { return testDb } }))
 
 beforeEach(async () => {

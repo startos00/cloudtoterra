@@ -1,9 +1,10 @@
 import { and, desc, eq } from 'drizzle-orm'
 import { nodes, type NewNode, type NodeRow } from './schema'
+import type { Db } from './db'
 
 export type ListFilters = { type?: string; subType?: string; condition?: string; society?: string }
 
-export async function createNode(db: any, input: NewNode): Promise<NodeRow> {
+export async function createNode(db: Db, input: NewNode): Promise<NodeRow> {
   const [row] = await db
     .insert(nodes)
     .values({ ...input, status: 'pending', isVisible: false })
@@ -11,7 +12,7 @@ export async function createNode(db: any, input: NewNode): Promise<NodeRow> {
   return row
 }
 
-export async function getNode(db: any, id: string): Promise<NodeRow | undefined> {
+export async function getNode(db: Db, id: string): Promise<NodeRow | undefined> {
   const [row] = await db.select().from(nodes).where(eq(nodes.id, id)).limit(1)
   return row
 }
@@ -24,7 +25,7 @@ function applyFilters(filters: ListFilters) {
   return conds
 }
 
-export async function listVisible(db: any, filters: ListFilters): Promise<NodeRow[]> {
+export async function listVisible(db: Db, filters: ListFilters): Promise<NodeRow[]> {
   return db
     .select()
     .from(nodes)
@@ -33,7 +34,7 @@ export async function listVisible(db: any, filters: ListFilters): Promise<NodeRo
 }
 
 export async function listAll(
-  db: any,
+  db: Db,
   filters: ListFilters & { status?: string },
 ): Promise<NodeRow[]> {
   const conds = applyFilters(filters)
@@ -46,7 +47,7 @@ export async function listAll(
 }
 
 export async function setStatus(
-  db: any,
+  db: Db,
   id: string,
   status: 'approved' | 'rejected' | 'pending',
 ): Promise<void> {

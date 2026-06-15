@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { and, eq, gte, sql } from 'drizzle-orm'
 import { nodes } from './schema'
+import type { Db } from './db'
 
 const SALT = process.env.ADMIN_SESSION_SECRET ?? 'dev-salt'
 
@@ -12,7 +13,7 @@ export function isHoneypotTripped(body: { website?: string }): boolean {
   return !!body.website && body.website.trim().length > 0
 }
 
-export async function recentCountForIp(db: any, hash: string, minutes: number): Promise<number> {
+export async function recentCountForIp(db: Db, hash: string, minutes: number): Promise<number> {
   const since = new Date(Date.now() - minutes * 60_000)
   const rows = await db
     .select({ n: sql<number>`count(*)` })

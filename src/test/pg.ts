@@ -2,6 +2,7 @@ import { PGlite } from '@electric-sql/pglite'
 import { drizzle } from 'drizzle-orm/pglite'
 import { sql } from 'drizzle-orm'
 import * as schema from '@/lib/schema'
+import type { Db } from '@/lib/db'
 
 // In-process Postgres for tests. No PostGIS needed in P1 (lat/lng + jsonb).
 export async function makeTestDb() {
@@ -38,5 +39,6 @@ export async function makeTestDb() {
       approved_at timestamptz
     );
   `)
-  return { db, client }
+  // pglite db exposes the same drizzle query API; expose it as Db for typed call-sites.
+  return { db: db as unknown as Db, client }
 }
