@@ -18,7 +18,7 @@ export function FilterPanel({ filters, onChange }: { filters: Filters; onChange:
           <label key={t} className="flex cursor-pointer items-center gap-2 text-sm">
             <input
               type="checkbox"
-              checked={filters.types.length === 0 || filters.types.includes(t)}
+              checked={filters.types.includes(t)}
               onChange={() => toggleType(t)}
             />
             <span className="inline-block h-3 w-3 rounded-full" style={{ background: TYPE_COLORS[t] }} />

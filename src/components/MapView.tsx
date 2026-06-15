@@ -17,39 +17,58 @@ export function MapView() {
   const mapRef = useRef<mapboxgl.Map | null>(null)
   const drawRef = useRef<MapboxDraw | null>(null)
   const markersRef = useRef<mapboxgl.Marker[]>([])
+  const renderGenRef = useRef(0)
 
-  const [filters, setFilters] = useState<Filters>({ types: [], condition: '' })
+  const [filters, setFilters] = useState<Filters>({ types: [...NODE_TYPES], condition: '' })
   const [addType, setAddType] = useState<NodeType | null>(null)
   const [draft, setDraft] = useState<{ type: NodeType; lat: number; lng: number; boundary?: unknown } | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
+  const [count, setCount] = useState(0)
   const [missingToken] = useState(!TOKEN)
 
   const fetchNodes = useCallback(async (): Promise<PublicNode[]> => {
     const p = new URLSearchParams()
     if (filters.condition) p.set('condition', filters.condition)
     const res = await fetch(`/api/nodes?${p.toString()}`)
+    if (!res.ok) throw new Error(`list failed: ${res.status}`)
     const j = await res.json()
     const all: PublicNode[] = j.data ?? []
-    return filters.types.length ? all.filter((n) => filters.types.includes(n.type)) : all
+    return all.filter((n) => filters.types.includes(n.type))
   }, [filters])
 
   const renderMarkers = useCallback(async () => {
     const map = mapRef.current
     if (!map) return
+    const gen = ++renderGenRef.current
+    setStatus('loading')
+    let nodes: PublicNode[]
+    try {
+      nodes = await fetchNodes()
+    } catch {
+      if (gen === renderGenRef.current) setStatus('error')
+      return
+    }
+    if (gen !== renderGenRef.current) return // a newer render started; abandon
     markersRef.current.forEach((m) => m.remove())
     markersRef.current = []
-    const nodes = await fetchNodes()
     for (const n of nodes) {
-      const el = document.createElement('div')
-      el.style.cssText = `width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer;background:${TYPE_COLORS[n.type]}`
-      el.title = n.nodeName
-      const popup = new mapboxgl.Popup({ offset: 14 }).setHTML(
-        `<strong>${escapeHtml(n.nodeName)}</strong><br/>${TYPE_LABELS[n.type]} · ${escapeHtml(n.subType)}` +
-        `${n.condition ? ` · ${n.condition}` : ''}<br/><a href="/node/${n.id}">View →</a>`,
+      const el = document.createElement('button')
+      el.type = 'button'
+      el.setAttribute('aria-label', `${TYPE_LABELS[n.type]}: ${n.nodeName}`)
+      el.textContent = TYPE_EMOJI[n.type] // glyph so type isn't conveyed by colour alone
+      el.style.cssText =
+        `display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:2px solid #fff;` +
+        `box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer;font-size:12px;line-height:1;padding:0;background:${TYPE_COLORS[n.type]}`
+      const popup = new mapboxgl.Popup({ offset: 16 }).setHTML(
+        `<strong>${escapeHtml(n.nodeName)}</strong><br/>${escapeHtml(TYPE_LABELS[n.type])} · ${escapeHtml(n.subType)}` +
+          `${n.condition ? ` · ${escapeHtml(n.condition)}` : ''}<br/><a href="/node/${encodeURIComponent(n.id)}">View →</a>`,
       )
       const marker = new mapboxgl.Marker({ element: el }).setLngLat([n.longitude, n.latitude]).setPopup(popup).addTo(map)
       markersRef.current.push(marker)
     }
+    setCount(nodes.length)
+    setStatus('ok')
   }, [fetchNodes])
 
   // init map once
@@ -59,20 +78,18 @@ export function MapView() {
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: [-78.87, 42.88], // Buffalo-ish default
+      center: [-78.87, 42.88],
       zoom: 4,
     })
     mapRef.current = map
     map.addControl(new mapboxgl.NavigationControl(), 'top-right')
-    map.on('load', () => { void renderMarkers() })
     return () => { map.remove(); mapRef.current = null }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // re-render markers on filter change
+  // render (and re-render on filter change) — self-gates on map readiness
   useEffect(() => { void renderMarkers() }, [renderMarkers])
 
-  // add-mode wiring (click-to-drop for building/civic; draw polygon for land)
+  // add-mode wiring
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
@@ -124,16 +141,30 @@ export function MapView() {
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
 
-      {/* filters */}
       <div className="absolute left-3 top-3 z-10 w-44"><FilterPanel filters={filters} onChange={setFilters} /></div>
 
-      {/* add controls */}
+      {/* status region (announced) */}
+      <div aria-live="polite" className="absolute right-3 top-3 z-10 max-w-[14rem] text-right text-xs">
+        {status === 'error' && (
+          <span className="rounded-md bg-red-600 px-2 py-1 text-white shadow">Couldn’t load places. Check your connection.</span>
+        )}
+        {status === 'ok' && count === 0 && (
+          <span className="rounded-md bg-white/95 px-2 py-1 text-gray-600 shadow">No places match yet — add one below.</span>
+        )}
+        {status === 'ok' && count > 0 && (
+          <span className="rounded-md bg-white/90 px-2 py-1 text-gray-600 shadow">{count} place{count === 1 ? '' : 's'}</span>
+        )}
+      </div>
+
       <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-white/95 px-2 py-2 shadow-lg backdrop-blur">
-        <span className="px-2 text-xs text-gray-500">{addType ? (addType === 'land' ? 'Draw the parcel boundary…' : 'Click the map to place it…') : 'Add a place:'}</span>
+        <span className="px-2 text-xs text-gray-500">
+          {addType ? (addType === 'land' ? 'Draw the parcel boundary…' : 'Click the map to place it…') : 'Add a place:'}
+        </span>
         {NODE_TYPES.map((t) => (
           <button
             key={t}
             onClick={() => setAddType(addType === t ? null : t)}
+            aria-pressed={addType === t}
             className="ml-1 rounded-full px-3 py-1 text-sm text-white"
             style={{ background: addType === t ? '#111' : TYPE_COLORS[t] }}
           >
@@ -143,7 +174,9 @@ export function MapView() {
       </div>
 
       {toast && (
-        <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-md bg-emerald-600 px-4 py-2 text-sm text-white shadow">{toast}</div>
+        <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-md bg-emerald-600 px-4 py-2 text-sm text-white shadow" role="status">
+          {toast}
+        </div>
       )}
 
       {draft && (
@@ -164,11 +197,25 @@ export function MapView() {
   )
 }
 
+// Shoelace area-weighted centroid of a closed ring; falls back to bbox centre for
+// degenerate/zero-area rings so the pin stays inside (or at least near) the parcel.
 function centroid(ring: [number, number][]): [number, number] {
-  const pts = ring.slice(0, -1) // drop closing point
-  const n = pts.length || 1
-  const sum = pts.reduce((a, p) => [a[0] + p[0], a[1] + p[1]] as [number, number], [0, 0] as [number, number])
-  return [sum[0] / n, sum[1] / n]
+  let a = 0, cx = 0, cy = 0
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x0, y0] = ring[i]
+    const [x1, y1] = ring[i + 1]
+    const cross = x0 * y1 - x1 * y0
+    a += cross
+    cx += (x0 + x1) * cross
+    cy += (y0 + y1) * cross
+  }
+  a *= 0.5
+  if (Math.abs(a) < 1e-12) {
+    const xs = ring.map((p) => p[0])
+    const ys = ring.map((p) => p[1])
+    return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2]
+  }
+  return [cx / (6 * a), cy / (6 * a)]
 }
 
 function escapeHtml(s: string): string {

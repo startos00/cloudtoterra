@@ -26,15 +26,18 @@ export function AdminLogin() {
     <div className="mx-auto max-w-sm px-6 py-20">
       <h1 className="text-2xl font-semibold">Admin</h1>
       <p className="mt-1 text-sm text-gray-500">Sign in to review submissions.</p>
+      <label htmlFor="admin-password" className="mt-4 block text-sm font-medium">Password</label>
       <input
+        id="admin-password"
         type="password"
-        className="mt-4 w-full rounded border p-2"
-        placeholder="Password"
+        className="mt-1 w-full rounded border p-2"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && login()}
+        aria-invalid={!!err}
+        aria-describedby={err ? 'login-error' : undefined}
       />
-      {err && <p className="mt-2 text-sm text-red-600">{err}</p>}
+      {err && <p id="login-error" role="alert" className="mt-2 text-sm text-red-600">{err}</p>}
       <button
         className="mt-4 w-full rounded bg-black py-2 text-sm text-white disabled:opacity-50"
         disabled={busy || !password}

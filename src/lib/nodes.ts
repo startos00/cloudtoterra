@@ -2,7 +2,7 @@ import { and, desc, eq } from 'drizzle-orm'
 import { nodes, type NewNode, type NodeRow } from './schema'
 import type { Db } from './db'
 
-export type ListFilters = { type?: string; subType?: string; condition?: string; society?: string }
+export type ListFilters = { type?: string; subType?: string; condition?: string }
 
 export async function createNode(db: Db, input: NewNode): Promise<NodeRow> {
   const [row] = await db

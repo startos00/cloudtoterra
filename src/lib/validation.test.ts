@@ -23,4 +23,9 @@ describe('submissionSchema', () => {
   it('rejects out-of-range coordinates', () => {
     expect(submissionSchema.safeParse({ ...base, latitude: 999 }).success).toBe(false)
   })
+  it('rejects non-http(s) photo url schemes', () => {
+    expect(submissionSchema.safeParse({ ...base, photoUrls: ['javascript:alert(1)'] }).success).toBe(false)
+    expect(submissionSchema.safeParse({ ...base, photoUrls: ['data:text/html,x'] }).success).toBe(false)
+    expect(submissionSchema.safeParse({ ...base, photoUrls: ['https://example.com/a.jpg'] }).success).toBe(true)
+  })
 })

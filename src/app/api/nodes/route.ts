@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { submissionSchema } from '@/lib/validation'
 import { createNode, listVisible } from '@/lib/nodes'
-import { ipHash, isHoneypotTripped, recentCountForIp, RATE_LIMIT } from '@/lib/abuse'
+import { clientIp, ipHash, isHoneypotTripped, recentCountForIp, RATE_LIMIT } from '@/lib/abuse'
 
 export async function GET(req: Request) {
   try {
@@ -33,8 +33,7 @@ export async function POST(req: Request) {
         { status: 400 },
       )
     }
-    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '0.0.0.0'
-    const hash = ipHash(ip)
+    const hash = ipHash(clientIp(req))
     if ((await recentCountForIp(db, hash, RATE_LIMIT.windowMinutes)) >= RATE_LIMIT.max) {
       return NextResponse.json({ data: null, error: 'rate_limited' }, { status: 429 })
     }

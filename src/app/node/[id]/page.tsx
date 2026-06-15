@@ -26,9 +26,9 @@ export default async function NodePage({ params }: { params: Promise<{ id: strin
 
       {node.photoUrls && node.photoUrls.length > 0 && (
         <div className="mt-5 grid grid-cols-2 gap-3">
-          {node.photoUrls.map((u) => (
+          {node.photoUrls.map((u, i) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={u} src={u} alt={node.nodeName} className="rounded-lg border object-cover" />
+            <img key={u} src={u} alt={`${node.nodeName} — photo ${i + 1}`} className="rounded-lg border object-cover" />
           ))}
         </div>
       )}

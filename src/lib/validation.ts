@@ -7,7 +7,17 @@ export const submissionSchema = z.object({
   condition: z.enum([...CONDITIONS]).optional(),
   nodeName: z.string().min(2).max(200),
   description: z.string().max(2000).optional(),
-  photoUrls: z.array(z.string().url()).max(6).optional(),
+  photoUrls: z
+    .array(
+      z.string().url().refine(
+        (u) => {
+          try { return ['http:', 'https:'].includes(new URL(u).protocol) } catch { return false }
+        },
+        'unsupported url scheme',
+      ),
+    )
+    .max(6)
+    .optional(),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
   boundary: z.any().optional(),
