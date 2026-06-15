@@ -1,0 +1,27 @@
+CloudtoTerra — the open public-good crowd map
+Copyright (C) 2026 CloudtoTerra / Nubis
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License along
+with this program. If not, see <https://www.gnu.org/licenses/>.
+
+--------------------------------------------------------------------------------
+NOTE FOR MAINTAINER: The COMPLETE canonical AGPL-3.0 license text must accompany
+this header for the license to be fully self-contained. Append it with:
+
+    curl -fsSL https://www.gnu.org/licenses/agpl-3.0.txt >> LICENSE
+
+(The network fetch was blocked during the autonomous build session, so only this
+standard AGPL notice header was written. Data content is separately licensed
+CC-BY-4.0 — see README.)
+--------------------------------------------------------------------------------
