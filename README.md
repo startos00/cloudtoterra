@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CloudtoTerra
 
-## Getting Started
+**From cloud to land** — an open, public-good crowd map of dormant, distressed, and underused
+urban assets (land, buildings, civic assets) waiting to be reactivated.
 
-First, run the development server:
+Anyone can drop a pin (and draw a boundary for land). Submissions are **gated**: hidden until an
+admin approves them. Approved data is a free commons (CC-BY-4.0) and a curated subset can feed the
+commercial **Nubis** intelligence platform.
+
+CloudtoTerra is the public-good sibling of [Nubis](https://nubis.land).
+
+---
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · Mapbox GL JS + mapbox-gl-draw ·
+Drizzle ORM + Neon Postgres · zod · Vitest (+ pglite for in-process DB tests).
+
+## Pin-drop model
+
+Three types — **Land · Building · Civic Asset** — each with a sub-type and a **condition**
+(`usable → dormant → distressed → derelict`). Partial spaces (a vacant office/unit) are Building
+sub-types. "Society/community" is a filter/tag + a background layer, not a pin type.
+(See `docs` in the facility-broker repo for the full spec/plan.)
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env.local     # then fill in values (see below)
+pnpm db:generate               # generate migration (already committed)
+pnpm db:migrate                # apply to your Neon DB (needs DATABASE_URL)
+pnpm dev                       # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment (`.env.local`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Var | Purpose |
+|---|---|
+| `NEXT_PUBLIC_MAPBOX_TOKEN` | Public Mapbox token (renders the map) |
+| `DATABASE_URL` | Neon Postgres connection string (submit/list/admin) |
+| `ADMIN_PASSWORD` | Password for `/admin` login |
+| `ADMIN_SESSION_SECRET` | Secret used to sign the admin cookie + hash IPs |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The map renders with just the Mapbox token; submitting/approving needs `DATABASE_URL`.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | What |
+|---|---|
+| `pnpm dev` | Dev server |
+| `pnpm build` | Production build |
+| `pnpm test` | Vitest (unit + pglite integration) |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm lint` | ESLint |
+| `pnpm db:generate` / `db:migrate` | Drizzle migrations |
+| `pnpm db:seed` | Insert demo nodes (`DATABASE_URL=... pnpm db:seed`) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## How it works
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+visitor drops pin / draws boundary → POST /api/nodes (status=pending, hidden)
+  → admin signs in at /admin → approve/reject
+  → approved → is_visible=true → shows on the public map + /node/[id]
+```
 
-## Deploy on Vercel
+Anti-abuse: honeypot field, salted IP hash, per-IP rate window. Nothing is public until approved.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Routes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `/` landing · `/about` mission + license · `/map` the crowd map · `/node/[id]` shareable detail · `/admin` approval queue
+- `GET/POST /api/nodes` · `GET/PATCH /api/nodes/[id]` · `POST/DELETE /api/admin/login`
+
+## Deploy (Vercel)
+
+1. Create a Vercel project from this repo (own project, separate from Nubis).
+2. Set env vars: `NEXT_PUBLIC_MAPBOX_TOKEN`, `DATABASE_URL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`.
+3. Provision a Neon Postgres DB; run `pnpm db:migrate` against it.
+4. Connect the domain **cloudtoterra.land**.
+
+## License
+
+- **Code:** AGPL-3.0-or-later (see `LICENSE`).
+- **Data:** CC-BY-4.0.
+
+## Roadmap
+
+- **P1 (this repo):** crowd map core — pin-drop, gated approval, public map. ✅
+- **P2:** civic background overlays (institutional anchors, node score, distress density, demographics).
+- **P3:** one-way curated sync feed into Nubis.
+- Later: accounts/contributor profiles, voting/reputation, PostGIS spatial indexing.
