@@ -60,8 +60,8 @@ export function MapView() {
       el.setAttribute('aria-label', `${TYPE_LABELS[n.type]}: ${n.nodeName}`)
       el.textContent = TYPE_EMOJI[n.type] // glyph so type isn't conveyed by colour alone
       el.style.cssText =
-        `display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:2px solid #fff;` +
-        `box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer;font-size:12px;line-height:1;padding:0;background:${TYPE_COLORS[n.type]}`
+        `display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:2px solid var(--color-paper);` +
+        `box-shadow:0 1px 5px oklch(0.255 0.018 55 / 0.45);cursor:pointer;font-size:12px;line-height:1;padding:0;background:${TYPE_COLORS[n.type]}`
       const popup = new mapboxgl.Popup({ offset: 16 }).setHTML(
         `<strong>${escapeHtml(n.nodeName)}</strong><br/>${escapeHtml(TYPE_LABELS[n.type])} · ${escapeHtml(n.subType)}` +
           `${n.condition ? ` · ${escapeHtml(n.condition)}` : ''}<br/><a href="/node/${encodeURIComponent(n.id)}">View →</a>`,
@@ -264,7 +264,7 @@ export function MapView() {
 
   if (missingToken) {
     return (
-      <div className="grid h-full place-items-center p-8 text-center text-sm text-gray-600">
+      <div className="grid h-full place-items-center p-8 text-center text-sm text-ink-2">
         <div>
           <p className="font-semibold">Map needs a Mapbox token.</p>
           <p className="mt-1">Set <code>NEXT_PUBLIC_MAPBOX_TOKEN</code> in <code>.env.local</code> and reload.</p>
@@ -279,51 +279,51 @@ export function MapView() {
 
       <div className="absolute left-3 top-3 z-10 w-44 space-y-2">
         <FilterPanel filters={filters} onChange={setFilters} />
-        <div className="rounded-lg bg-white/95 p-2 shadow-md backdrop-blur">
-          <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Overlays</div>
+        <div className="rounded border border-line bg-paper/95 p-2 shadow-sm backdrop-blur">
+          <div className="label">Overlays</div>
           <button
             onClick={() => setShowDensity((v) => !v)}
             aria-pressed={showDensity}
-            className="mt-1 flex w-full items-center gap-2 text-left text-sm"
+            className="mt-1.5 flex w-full items-center gap-2 text-left text-sm text-ink"
           >
-            <span className={`inline-block h-3 w-3 rounded-full ${showDensity ? 'bg-orange-500' : 'bg-gray-300'}`} />
+            <span className="inline-block h-3 w-3 rounded-full" style={{ background: showDensity ? 'var(--color-ember)' : 'var(--color-line-strong)' }} />
             Distress density
           </button>
           <button
             onClick={() => setShowAnchors((v) => !v)}
             aria-pressed={showAnchors}
-            className="mt-1 flex w-full items-center gap-2 text-left text-sm"
+            className="mt-1.5 flex w-full items-center gap-2 text-left text-sm text-ink"
           >
-            <span className={`inline-block h-3 w-3 rounded-full ${showAnchors ? 'bg-blue-600' : 'bg-gray-300'}`} />
+            <span className="inline-block h-3 w-3 rounded-full" style={{ background: showAnchors ? 'var(--color-civic)' : 'var(--color-line-strong)' }} />
             Anchors (hospital/uni/rail)
           </button>
         </div>
       </div>
 
       {/* status region (announced) */}
-      <div aria-live="polite" className="absolute right-3 top-3 z-10 max-w-[14rem] text-right text-xs">
+      <div aria-live="polite" className="absolute right-3 top-3 z-10 max-w-[14rem] text-right">
         {status === 'error' && (
-          <span className="rounded-md bg-red-600 px-2 py-1 text-white shadow">Couldn’t load places. Check your connection.</span>
+          <span className="chip border-transparent text-paper" style={{ background: 'var(--color-danger)' }}>Couldn’t load places</span>
         )}
         {status === 'ok' && count === 0 && (
-          <span className="rounded-md bg-white/95 px-2 py-1 text-gray-600 shadow">No places match yet — add one below.</span>
+          <span className="chip">No places yet. Add one below.</span>
         )}
         {status === 'ok' && count > 0 && (
-          <span className="rounded-md bg-white/90 px-2 py-1 text-gray-600 shadow">{count} place{count === 1 ? '' : 's'}</span>
+          <span className="chip coord">{count} place{count === 1 ? '' : 's'}</span>
         )}
       </div>
 
-      <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full bg-white/95 px-2 py-2 shadow-lg backdrop-blur">
-        <span className="px-2 text-xs text-gray-500">
-          {addType ? (addType === 'land' ? 'Draw the parcel boundary…' : 'Click the map to place it…') : 'Add a place:'}
+      <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded border border-line bg-paper/95 px-2 py-2 shadow-md backdrop-blur">
+        <span className="label px-1">
+          {addType ? (addType === 'land' ? 'Draw the boundary' : 'Click to place') : 'Add'}
         </span>
         {NODE_TYPES.map((t) => (
           <button
             key={t}
             onClick={() => setAddType(addType === t ? null : t)}
             aria-pressed={addType === t}
-            className="ml-1 rounded-full px-3 py-1 text-sm text-white"
-            style={{ background: addType === t ? '#111' : TYPE_COLORS[t] }}
+            className="rounded-[3px] px-3 py-1 text-sm font-medium text-paper transition-colors"
+            style={{ background: addType === t ? 'var(--color-ink)' : `var(--color-${t})` }}
           >
             {TYPE_EMOJI[t]} {TYPE_LABELS[t]}
           </button>
@@ -331,7 +331,7 @@ export function MapView() {
       </div>
 
       {toast && (
-        <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded-md bg-emerald-600 px-4 py-2 text-sm text-white shadow" role="status">
+        <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2 rounded border border-line-strong bg-ink px-4 py-2 text-sm text-paper shadow" role="status">
           {toast}
         </div>
       )}

@@ -10,7 +10,7 @@ const MapView = dynamic(() => import('@/components/MapView').then((m) => m.MapVi
 
 export default function MapPage() {
   return (
-    <div className="h-[calc(100dvh-3.5rem)] w-full">
+    <div className="h-[calc(100dvh-4rem)] w-full">
       <MapView />
     </div>
   )

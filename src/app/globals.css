@@ -1,27 +1,135 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ── CloudtoTerra design tokens (field-atlas / cartographic) ───────────────── */
+@theme {
+  /* surfaces & ink — warm-tinted neutrals, never pure black/white */
+  --color-paper: oklch(0.972 0.008 83);
+  --color-paper-raised: oklch(0.948 0.010 83);
+  --color-paper-sunk: oklch(0.915 0.012 83);
+  --color-ink: oklch(0.255 0.018 55);
+  --color-ink-2: oklch(0.435 0.015 58);
+  --color-ink-3: oklch(0.560 0.012 60);
+  --color-line: oklch(0.255 0.018 55 / 0.16);
+  --color-line-strong: oklch(0.255 0.018 55 / 0.34);
+
+  /* cartographic legend triad (keep in sync with src/lib/ui.ts) */
+  --color-land: oklch(0.66 0.095 80);
+  --color-building: oklch(0.585 0.125 48);
+  --color-civic: oklch(0.520 0.070 140);
+
+  /* accent + thesis wash */
+  --color-ember: oklch(0.605 0.155 42);
+  --color-cloud: oklch(0.895 0.013 235);
+  --color-terra: oklch(0.86 0.030 78);
+
+  --color-danger: oklch(0.55 0.17 28);
+
+  --font-display: "Bricolage Grotesque", "Hanken Grotesk", system-ui, sans-serif;
+  --font-sans: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-html,
+/* ── base ──────────────────────────────────────────────────────────────────── */
+:root { color-scheme: light; }
+html, body { height: 100%; }
 body {
-  height: 100%;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; }
+::selection { background: oklch(0.605 0.155 42 / 0.22); }
+
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--color-ember);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-.mapboxgl-popup-content {
-  font-family: inherit;
-  font-size: 13px;
-  padding: 10px 12px;
-}
-.mapboxgl-popup-content a {
-  color: #b5651d;
+/* ── cartographic utilities ──────────────────────────────────────────────────── */
+/* survey label: tracked uppercase civic-sans */
+.label {
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.7rem;
   font-weight: 600;
+  color: var(--color-ink-3);
 }
+/* coordinates: tabular figures, never mono-costume */
+.coord { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+
+/* graph/survey paper grid (very faint) */
+.graticule {
+  background-image:
+    linear-gradient(var(--color-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
+}
+
+/* the literal thesis: cool cloud resolving into warm terra */
+.cloud-to-land {
+  background:
+    linear-gradient(180deg,
+      var(--color-cloud) 0%,
+      var(--color-paper) 46%,
+      var(--color-terra) 100%);
+}
+
+/* crisp atlas buttons — never pills */
+.btn-ink {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: var(--color-ink); color: var(--color-paper);
+  padding: 0.7rem 1.15rem; border-radius: 3px;
+  font-weight: 600; font-size: 0.95rem;
+  transition: background 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1);
+}
+.btn-ink:hover { background: var(--color-ember); }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  background: transparent; color: var(--color-ink);
+  padding: 0.7rem 1.15rem; border-radius: 3px;
+  border: 1px solid var(--color-line-strong); font-weight: 600; font-size: 0.95rem;
+  transition: background 200ms cubic-bezier(0.22,1,0.36,1);
+}
+.btn-ghost:hover { background: var(--color-paper-sunk); }
+
+/* coordinate / taxonomy chip */
+.chip {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  border: 1px solid var(--color-line); background: var(--color-paper-sunk);
+  padding: 0.15rem 0.5rem; border-radius: 3px;
+  font-size: 0.72rem; letter-spacing: 0.04em;
+}
+
+/* reveal: fade-up, honored only when motion is allowed */
+@keyframes ctt-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.rise { animation: ctt-rise 520ms cubic-bezier(0.16,1,0.3,1) both; }
+
+/* hero contour line draw */
+@keyframes ctt-draw { to { stroke-dashoffset: 0; } }
+.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: ctt-draw 1600ms cubic-bezier(0.16,1,0.3,1) forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .draw { animation: none; }
+  .draw { stroke-dashoffset: 0; }
+  * { scroll-behavior: auto !important; }
+}
+
+/* mapbox popups read as paper survey notes */
+.mapboxgl-popup-content {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 12px 14px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 4px;
+  box-shadow: 0 6px 22px oklch(0.255 0.018 55 / 0.14);
+}
+.mapboxgl-popup-content a { color: var(--color-ember); font-weight: 700; }
+.mapboxgl-popup-tip { display: none; }
+.mapboxgl-ctrl-group { border: 1px solid var(--color-line-strong) !important; border-radius: 4px !important; }

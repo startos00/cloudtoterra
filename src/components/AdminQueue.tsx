@@ -33,46 +33,43 @@ export function AdminQueue({ initial }: { initial: Item[] }) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
-      <h1 className="text-2xl font-semibold">Pending submissions</h1>
-      <p className="mt-1 text-sm text-gray-500">{items.length} awaiting review</p>
+    <div className="mx-auto max-w-3xl px-5 py-12">
+      <div className="flex items-baseline justify-between border-b border-line pb-3">
+        <p className="label">Review queue</p>
+        <p className="label coord">{items.length} pending</p>
+      </div>
+      <h1 className="mt-6 font-display text-3xl font-semibold tracking-tight">Pending submissions</h1>
 
-      {items.length === 0 && <p className="mt-8 text-gray-500">Nothing pending. 🎉</p>}
+      {items.length === 0 && <p className="mt-10 text-ink-3">Nothing pending. The map is up to date.</p>}
 
-      <ul className="mt-6 space-y-3">
+      <ul className="mt-7 space-y-3">
         {items.map((n) => (
-          <li key={n.id} className="rounded-xl border p-4">
+          <li key={n.id} className="rounded border border-line bg-paper-raised p-4">
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="font-semibold">{n.nodeName}</div>
-                <div className="mt-1 text-xs text-gray-500">
-                  {TYPE_LABELS[n.type]} · {prettySub(n.subType)}{n.condition ? ` · ${n.condition}` : ''}
-                  {n.city ? ` · ${n.city}` : ''}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: `var(--color-${n.type})` }} aria-hidden />
+                  <span className="font-display text-lg font-semibold">{n.nodeName}</span>
                 </div>
-                {n.description && <p className="mt-2 text-sm text-gray-700">{n.description}</p>}
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  <span className="chip">{TYPE_LABELS[n.type]}</span>
+                  <span className="chip">{prettySub(n.subType)}</span>
+                  {n.condition && <span className="chip">{n.condition}</span>}
+                  {n.city && <span className="chip">{n.city}</span>}
+                </div>
+                {n.description && <p className="mt-2 text-sm text-ink-2">{n.description}</p>}
                 <a
-                  className="mt-2 inline-block text-xs text-blue-600 hover:underline"
+                  className="label mt-2 inline-block normal-case tracking-wide text-ink-3 hover:text-ember"
+                  style={{ textTransform: 'none' }}
                   href={`https://www.google.com/maps?q=${n.latitude},${n.longitude}`}
                   target="_blank" rel="noreferrer"
                 >
                   {n.latitude.toFixed(4)}, {n.longitude.toFixed(4)} ↗
                 </a>
               </div>
-              <div className="flex shrink-0 gap-2">
-                <button
-                  className="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
-                  disabled={busy === n.id}
-                  onClick={() => act(n.id, 'approved')}
-                >
-                  Approve
-                </button>
-                <button
-                  className="rounded border px-3 py-1.5 text-sm disabled:opacity-50"
-                  disabled={busy === n.id}
-                  onClick={() => act(n.id, 'rejected')}
-                >
-                  Reject
-                </button>
+              <div className="flex shrink-0 flex-col gap-2">
+                <button className="btn-ink disabled:opacity-50" disabled={busy === n.id} onClick={() => act(n.id, 'approved')}>Approve</button>
+                <button className="btn-ghost disabled:opacity-50" disabled={busy === n.id} onClick={() => act(n.id, 'rejected')}>Reject</button>
               </div>
             </div>
           </li>

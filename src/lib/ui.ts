@@ -1,9 +1,10 @@
 import type { NodeType, Condition } from './taxonomy'
 
+// Kept in sync with the --color-{land,building,civic} tokens in globals.css / DESIGN.md.
 export const TYPE_COLORS: Record<NodeType, string> = {
-  land: '#7c6f5a',
-  building: '#b5651d',
-  civic: '#8a6d3b',
+  land: 'oklch(0.66 0.095 80)',
+  building: 'oklch(0.585 0.125 48)',
+  civic: 'oklch(0.520 0.070 140)',
 }
 
 export const TYPE_LABELS: Record<NodeType, string> = {

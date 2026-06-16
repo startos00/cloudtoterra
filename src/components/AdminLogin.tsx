@@ -23,26 +23,23 @@ export function AdminLogin() {
   }
 
   return (
-    <div className="mx-auto max-w-sm px-6 py-20">
-      <h1 className="text-2xl font-semibold">Admin</h1>
-      <p className="mt-1 text-sm text-gray-500">Sign in to review submissions.</p>
-      <label htmlFor="admin-password" className="mt-4 block text-sm font-medium">Password</label>
+    <div className="mx-auto max-w-sm px-5 py-20">
+      <p className="label">Restricted · survey office</p>
+      <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">Admin</h1>
+      <p className="mt-1 text-sm text-ink-3">Sign in to review submissions.</p>
+      <label htmlFor="admin-password" className="mt-6 block text-sm font-medium text-ink">Password</label>
       <input
         id="admin-password"
         type="password"
-        className="mt-1 w-full rounded border p-2"
+        className="mt-1 w-full rounded border border-line bg-paper p-2 text-ink"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && login()}
         aria-invalid={!!err}
         aria-describedby={err ? 'login-error' : undefined}
       />
-      {err && <p id="login-error" role="alert" className="mt-2 text-sm text-red-600">{err}</p>}
-      <button
-        className="mt-4 w-full rounded bg-black py-2 text-sm text-white disabled:opacity-50"
-        disabled={busy || !password}
-        onClick={login}
-      >
+      {err && <p id="login-error" role="alert" className="mt-2 text-sm text-[color:var(--color-danger)]">{err}</p>}
+      <button className="btn-ink mt-4 w-full justify-center disabled:opacity-50" disabled={busy || !password} onClick={login}>
         {busy ? 'Signing in…' : 'Sign in'}
       </button>
     </div>
