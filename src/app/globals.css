@@ -1,80 +1,87 @@
 @import "tailwindcss";
 
-/* ── CloudtoTerra · interactive monograph (per user reference) ──────────────── */
+/* ── CloudtoTerra · aurora field-index (adapted from user reference) ─────────── */
 @theme {
   --color-paper: #ffffff;
   --color-paper-raised: #ffffff;
-  --color-paper-sunk: #f4f4f2;
+  --color-paper-sunk: #f5f6f8;
   --color-ink: #000000;
-  --color-ink-2: #2a2a2a;
-  --color-ink-3: #6b6b6b;
+  --color-ink-2: #303236;
+  --color-ink-3: #74777e;
   --color-line: #000000;
   --color-line-strong: #000000;
+  --color-accent: #2c52ff;     /* electric blue from the aurora system */
   --color-grid: rgba(0, 0, 0, 0.06);
 
-  /* monochrome by design — node types are distinguished by glyph/label, not colour */
+  /* monochrome node language — distinguished by glyph/label, accent for active */
   --color-land: #000000;
   --color-building: #000000;
   --color-civic: #000000;
-  --color-ember: #000000;
+  --color-ember: #2c52ff;
   --color-danger: #000000;
 
-  --font-serif: "EB Garamond", Georgia, "Times New Roman", serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Space Mono", ui-monospace, "SF Mono", monospace;
+  --font-sans: "Helvetica Neue", Helvetica, Arial, "Segoe UI", sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
   --font-display: var(--font-sans);
 }
 
 :root { color-scheme: light; }
-* { cursor: crosshair; }
 html, body { height: 100%; }
 body {
   background: var(--color-paper);
   color: var(--color-ink);
-  font-family: var(--font-serif);
-  font-size: 16px; line-height: 1.5;
+  font-family: var(--font-sans);
+  font-size: 16px; line-height: 1.45;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 }
-h1, h2, h3, h4 {
-  font-family: var(--font-sans);
-  text-transform: uppercase; font-weight: 600;
-  letter-spacing: -0.02em; line-height: 1.1;
-}
+h1, h2, h3, h4 { font-family: var(--font-sans); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
 ::selection { background: #000; color: #fff; }
 
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible, input:focus-visible,
-select:focus-visible, textarea:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+select:focus-visible, textarea:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #fff; border-left: 1px solid #000; }
-::-webkit-scrollbar-thumb { background: #000; }
+/* the signature: a soft blue/violet aurora resolving into white */
+.aurora {
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(circle at 50% 36%, rgba(31, 162, 255, 0.52) 0%, transparent 60%),
+    radial-gradient(circle at 8% 6%, rgba(139, 140, 248, 0.70) 0%, transparent 55%),
+    radial-gradient(circle at 92% 8%, rgba(91, 155, 255, 0.60) 0%, transparent 52%),
+    linear-gradient(to top, #ffffff 12%, rgba(255, 255, 255, 0) 56%);
+}
 
-/* mono journal voice */
+/* glass card for app surfaces */
+.glass {
+  background: rgba(255, 255, 255, 0.70);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.06);
+}
+
 .label, .meta {
-  font-family: var(--font-mono);
-  text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: var(--color-ink);
+  font-family: var(--font-sans); text-transform: uppercase;
+  font-size: 0.65rem; letter-spacing: 0.08em; font-weight: 600; color: var(--color-ink);
 }
 .coord { font-variant-numeric: tabular-nums; }
 
-/* hard-bordered monograph buttons */
 .btn-ink, .btn-ghost {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  font-family: var(--font-sans); text-transform: uppercase; font-weight: 600;
-  font-size: 13px; letter-spacing: 0.02em; padding: 0.72rem 1.15rem;
-  border: 1px solid #000; transition: background 0.15s, color 0.15s;
+  display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;
+  font-family: var(--font-sans); text-transform: uppercase; font-weight: 700;
+  font-size: 12px; letter-spacing: 0.04em; padding: 0.7rem 1.1rem; border: 1px solid #000;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .btn-ink { background: #000; color: #fff; }
-.btn-ink:hover { background: #fff; color: #000; }
-.btn-ghost { background: #fff; color: #000; }
+.btn-ink:hover { background: var(--color-accent); border-color: var(--color-accent); }
+.btn-ghost { background: transparent; color: #000; }
 .btn-ghost:hover { background: #000; color: #fff; }
 
 .chip {
   display: inline-flex; align-items: center; gap: 0.35rem;
-  font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;
-  border: 1px solid #000; padding: 0.12rem 0.42rem; color: var(--color-ink);
+  font-family: var(--font-sans); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  border: 1px solid #000; padding: 0.14rem 0.46rem;
 }
 
-/* faint survey grid */
 .graticule, .grid-bg {
   background-image:
     linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
@@ -82,33 +89,19 @@ select:focus-visible, textarea:focus-visible { outline: 2px solid #000; outline-
   background-size: 20px 20px;
 }
 
-/* data readout rows */
-.data-row {
-  display: flex; justify-content: space-between; align-items: baseline;
-  font-family: var(--font-mono); font-size: 11px;
-  border-bottom: 1px dotted #ccc; padding-bottom: 7px; margin-bottom: 7px;
-}
-.data-row b { font-weight: 700; }
-
-/* inline figure references */
-.figure-ref {
-  font-family: var(--font-sans); font-size: 0.8em; font-weight: 600;
-  text-transform: uppercase; border-bottom: 1px solid #000; transition: background 0.15s, color 0.15s;
-}
-.figure-ref:hover { background: #000; color: #fff; border-bottom-color: transparent; }
-
-/* vertical system status in the margin column */
-.vertical { writing-mode: vertical-rl; transform: rotate(180deg); }
+/* range sliders (per reference: hairline track, thin tick thumb) */
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #000; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 6px; background: #000; margin-top: -5px; }
+input[type=range]::-moz-range-track { height: 2px; background: #000; }
+input[type=range]::-moz-range-thumb { height: 12px; width: 6px; border: 0; border-radius: 0; background: #000; }
 
 @keyframes ctt-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .rise { animation: ctt-rise 480ms cubic-bezier(0.16,1,0.3,1) both; }
 @media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
 
-/* mapbox as a monograph plate */
-.mapboxgl-popup-content {
-  font-family: var(--font-serif); font-size: 13px; padding: 12px 14px;
-  background: #fff; color: #000; border: 1px solid #000; border-radius: 0;
-}
-.mapboxgl-popup-content a { font-family: var(--font-sans); text-transform: uppercase; font-size: 11px; font-weight: 600; color: #000; }
+/* mapbox plates */
+.mapboxgl-popup-content { font-family: var(--font-sans); font-size: 13px; padding: 12px 14px; background: #fff; color: #000; border: 1px solid #000; border-radius: 0; }
+.mapboxgl-popup-content a { text-transform: uppercase; font-size: 11px; font-weight: 700; color: var(--color-accent); }
 .mapboxgl-popup-tip { display: none; }
-.mapboxgl-ctrl-group { background: #fff !important; border: 1px solid #000 !important; border-radius: 0 !important; }
+.mapboxgl-ctrl-group { background: rgba(255,255,255,0.8) !important; border: 1px solid #000 !important; border-radius: 0 !important; }
