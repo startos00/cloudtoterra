@@ -3,9 +3,9 @@ import Link from 'next/link'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'CloudtoTerra — from cloud to land',
+  title: 'CloudtoTerra — an atlas of dormant ground',
   description:
-    'An open, public-good crowd map of dormant land, buildings and civic assets waiting to be reactivated.',
+    'An open, public-good crowd map of dormant land, buildings, civic assets, and the societies reactivating them.',
 }
 
 const NAV = [
@@ -17,36 +17,27 @@ const NAV = [
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Global runtime <link> in the root layout (applies to all routes) — deliberate over
-            next/font to avoid a build-time font fetch; system fallbacks keep it safe offline. */}
+        {/* Global runtime <link> (root layout, applies everywhere) — avoids a build-time font fetch. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..700&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+          href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
         />
       </head>
       <body className="flex min-h-full flex-col">
-        <header className="sticky top-0 z-30 border-b border-line bg-paper/85 backdrop-blur-sm">
-          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-            <Link href="/" className="group flex items-baseline gap-3">
-              <span className="font-display text-xl font-semibold tracking-tight text-ink">
-                Cloud<span className="text-ember">to</span>Terra
-              </span>
-              <span className="label hidden sm:inline border-l border-line pl-3 coord">
-                N 42.9° · from cloud to land
-              </span>
+        <header className="sticky top-0 z-30 border-b border-ink bg-paper">
+          <div className="flex h-14 items-center justify-between px-5">
+            <Link href="/" className="flex items-baseline gap-3">
+              <span className="font-sans text-base font-semibold uppercase tracking-tight">CloudtoTerra</span>
+              <span className="meta hidden coord sm:inline">N 42.9° · FROM CLOUD TO LAND</span>
             </Link>
             <nav className="flex items-center gap-5">
               {NAV.map((n) => (
-                <Link
-                  key={n.href}
-                  href={n.href}
-                  className="label transition-colors hover:text-ink"
-                >
+                <Link key={n.href} href={n.href} className="meta transition-colors hover:bg-ink hover:text-paper">
                   {n.label}
                 </Link>
               ))}

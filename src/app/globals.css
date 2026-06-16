@@ -1,127 +1,114 @@
 @import "tailwindcss";
 
-/* ── CloudtoTerra · "deep survey" — warm near-black field, bone ink, molten ember drench ── */
+/* ── CloudtoTerra · interactive monograph (per user reference) ──────────────── */
 @theme {
-  --color-paper: oklch(0.205 0.014 62);        /* primary surface (deep warm ink) */
-  --color-paper-raised: oklch(0.250 0.016 62); /* raised panels / map chrome */
-  --color-paper-sunk: oklch(0.165 0.012 62);   /* insets, chips */
-  --color-ink: oklch(0.945 0.012 86);          /* primary text (warm bone) */
-  --color-ink-2: oklch(0.770 0.014 84);        /* secondary */
-  --color-ink-3: oklch(0.600 0.014 76);        /* muted labels */
-  --color-line: oklch(0.945 0.012 86 / 0.13);
-  --color-line-strong: oklch(0.945 0.012 86 / 0.30);
+  --color-paper: #ffffff;
+  --color-paper-raised: #ffffff;
+  --color-paper-sunk: #f4f4f2;
+  --color-ink: #000000;
+  --color-ink-2: #2a2a2a;
+  --color-ink-3: #6b6b6b;
+  --color-line: #000000;
+  --color-line-strong: #000000;
+  --color-grid: rgba(0, 0, 0, 0.06);
 
-  /* glowing legend triad — distinct hues that read on warm-dark */
-  --color-land: oklch(0.82 0.13 92);     /* gold */
-  --color-building: oklch(0.64 0.16 33); /* clay-red */
-  --color-civic: oklch(0.76 0.11 192);   /* cyan-teal */
+  /* monochrome by design — node types are distinguished by glyph/label, not colour */
+  --color-land: #000000;
+  --color-building: #000000;
+  --color-civic: #000000;
+  --color-ember: #000000;
+  --color-danger: #000000;
 
-  /* THE accent — molten ember drench */
-  --color-ember: oklch(0.72 0.18 48);
-
-  --color-danger: oklch(0.66 0.19 28);
-
-  --font-display: "Bricolage Grotesque", "Hanken Grotesk", system-ui, sans-serif;
-  --font-sans: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "EB Garamond", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Space Mono", ui-monospace, "SF Mono", monospace;
+  --font-display: var(--font-sans);
 }
 
-:root { color-scheme: dark; }
+:root { color-scheme: light; }
+* { cursor: crosshair; }
 html, body { height: 100%; }
 body {
   background: var(--color-paper);
   color: var(--color-ink);
-  font-family: var(--font-sans);
-  line-height: 1.65;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  font-family: var(--font-serif);
+  font-size: 16px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
 }
-h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1.02; }
-::selection { background: oklch(0.72 0.18 48 / 0.32); color: var(--color-ink); }
+h1, h2, h3, h4 {
+  font-family: var(--font-sans);
+  text-transform: uppercase; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.1;
+}
+::selection { background: #000; color: #fff; }
 
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible, input:focus-visible,
-select:focus-visible, textarea:focus-visible {
-  outline: 2px solid var(--color-ember);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
+select:focus-visible, textarea:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
 
-/* survey label + coordinates */
-.label {
-  font-family: var(--font-sans);
-  text-transform: uppercase; letter-spacing: 0.16em;
-  font-size: 0.7rem; font-weight: 600; color: var(--color-ink-3);
-}
-.coord { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #fff; border-left: 1px solid #000; }
+::-webkit-scrollbar-thumb { background: #000; }
 
-/* faint survey grid on the dark field */
-.graticule {
-  background-image:
-    linear-gradient(var(--color-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
-  background-size: 30px 30px; background-position: -1px -1px;
+/* mono journal voice */
+.label, .meta {
+  font-family: var(--font-mono);
+  text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; color: var(--color-ink);
 }
+.coord { font-variant-numeric: tabular-nums; }
 
-/* the thesis, inverted: deep night sky resolving into ember-warmed ground */
-.cloud-to-land {
-  background:
-    radial-gradient(115% 80% at 80% 14%, oklch(0.72 0.18 48 / 0.20), transparent 58%),
-    linear-gradient(180deg, oklch(0.165 0.022 250) 0%, var(--color-paper) 50%, oklch(0.30 0.07 46) 150%);
-}
-
-/* ember beacon glow + live radar sweep (hero signature) */
-.beacon {
-  background: radial-gradient(circle, oklch(0.72 0.18 48 / 0.55) 0%, transparent 68%);
-  filter: blur(6px);
-}
-@keyframes ctt-sweep { to { transform: rotate(360deg); } }
-.radar-sweep {
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, transparent 0deg, oklch(0.72 0.18 48 / 0.30) 26deg, transparent 58deg);
-  animation: ctt-sweep 7s linear infinite;
-}
-.glow-ember { color: var(--color-ember); text-shadow: 0 0 26px oklch(0.72 0.18 48 / 0.55); }
-
-/* buttons — primary is the ember drench, glowing */
-.btn-ink {
+/* hard-bordered monograph buttons */
+.btn-ink, .btn-ghost {
   display: inline-flex; align-items: center; gap: 0.5rem;
-  background: var(--color-ember); color: oklch(0.17 0.02 50);
-  padding: 0.72rem 1.2rem; border-radius: 3px; font-weight: 700; font-size: 0.95rem;
-  box-shadow: 0 0 0 0 oklch(0.72 0.18 48 / 0);
-  transition: filter 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 240ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1);
+  font-family: var(--font-sans); text-transform: uppercase; font-weight: 600;
+  font-size: 13px; letter-spacing: 0.02em; padding: 0.72rem 1.15rem;
+  border: 1px solid #000; transition: background 0.15s, color 0.15s;
 }
-.btn-ink:hover { filter: brightness(1.08); box-shadow: 0 8px 30px oklch(0.72 0.18 48 / 0.40); transform: translateY(-1px); }
-.btn-ghost {
-  display: inline-flex; align-items: center; gap: 0.5rem;
-  background: transparent; color: var(--color-ink);
-  padding: 0.72rem 1.2rem; border-radius: 3px; border: 1px solid var(--color-line-strong);
-  font-weight: 600; font-size: 0.95rem; transition: background 200ms cubic-bezier(0.22,1,0.36,1), border-color 200ms;
-}
-.btn-ghost:hover { background: var(--color-paper-raised); border-color: var(--color-ember); }
+.btn-ink { background: #000; color: #fff; }
+.btn-ink:hover { background: #fff; color: #000; }
+.btn-ghost { background: #fff; color: #000; }
+.btn-ghost:hover { background: #000; color: #fff; }
 
 .chip {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  border: 1px solid var(--color-line); background: var(--color-paper-sunk);
-  padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.72rem; letter-spacing: 0.04em; color: var(--color-ink-2);
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;
+  border: 1px solid #000; padding: 0.12rem 0.42rem; color: var(--color-ink);
 }
 
-@keyframes ctt-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-.rise { animation: ctt-rise 560ms cubic-bezier(0.16,1,0.3,1) both; }
-
-@media (prefers-reduced-motion: reduce) {
-  .rise { animation: none; }
-  .radar-sweep { animation: none; }
-  * { scroll-behavior: auto !important; }
+/* faint survey grid */
+.graticule, .grid-bg {
+  background-image:
+    linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-/* mapbox popups as dark survey notes */
+/* data readout rows */
+.data-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: var(--font-mono); font-size: 11px;
+  border-bottom: 1px dotted #ccc; padding-bottom: 7px; margin-bottom: 7px;
+}
+.data-row b { font-weight: 700; }
+
+/* inline figure references */
+.figure-ref {
+  font-family: var(--font-sans); font-size: 0.8em; font-weight: 600;
+  text-transform: uppercase; border-bottom: 1px solid #000; transition: background 0.15s, color 0.15s;
+}
+.figure-ref:hover { background: #000; color: #fff; border-bottom-color: transparent; }
+
+/* vertical system status in the margin column */
+.vertical { writing-mode: vertical-rl; transform: rotate(180deg); }
+
+@keyframes ctt-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.rise { animation: ctt-rise 480ms cubic-bezier(0.16,1,0.3,1) both; }
+@media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
+
+/* mapbox as a monograph plate */
 .mapboxgl-popup-content {
-  font-family: var(--font-sans); font-size: 13px; padding: 12px 14px;
-  background: var(--color-paper-raised); color: var(--color-ink);
-  border: 1px solid var(--color-line-strong); border-radius: 4px;
-  box-shadow: 0 10px 30px oklch(0 0 0 / 0.5);
+  font-family: var(--font-serif); font-size: 13px; padding: 12px 14px;
+  background: #fff; color: #000; border: 1px solid #000; border-radius: 0;
 }
-.mapboxgl-popup-content a { color: var(--color-ember); font-weight: 700; }
+.mapboxgl-popup-content a { font-family: var(--font-sans); text-transform: uppercase; font-size: 11px; font-weight: 600; color: #000; }
 .mapboxgl-popup-tip { display: none; }
-.mapboxgl-ctrl-group { background: var(--color-paper-raised) !important; border: 1px solid var(--color-line-strong) !important; border-radius: 4px !important; }
-.mapboxgl-ctrl-group button + button { border-top: 1px solid var(--color-line) !important; }
-.mapboxgl-ctrl button .mapboxgl-ctrl-icon { filter: invert(1) hue-rotate(180deg); }
+.mapboxgl-ctrl-group { background: #fff !important; border: 1px solid #000 !important; border-radius: 0 !important; }
