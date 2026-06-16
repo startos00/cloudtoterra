@@ -27,6 +27,7 @@ export function MapView() {
   const [count, setCount] = useState(0)
   const [missingToken] = useState(!TOKEN)
   const [showDensity, setShowDensity] = useState(false)
+  const [showAnchors, setShowAnchors] = useState(false)
 
   const fetchNodes = useCallback(async (): Promise<PublicNode[]> => {
     const p = new URLSearchParams()
@@ -183,6 +184,84 @@ export function MapView() {
     return () => { cancelled = true }
   }, [showDensity])
 
+  // institutional-anchors overlay (OSM Overpass; fetched for the current viewport)
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    let cancelled = false
+    const SRC = 'ctt-anchors'
+    const LAYER = 'ctt-anchors-pts'
+
+    function removeAll() {
+      const m = mapRef.current
+      if (!m) return
+      if (m.getLayer(LAYER)) m.removeLayer(LAYER)
+      if (m.getSource(SRC)) m.removeSource(SRC)
+    }
+    function onAnchorClick(e: mapboxgl.MapLayerMouseEvent) {
+      const m = mapRef.current
+      const f = e.features?.[0]
+      if (!m || !f) return
+      new mapboxgl.Popup({ offset: 10 })
+        .setLngLat(e.lngLat)
+        .setHTML(`<strong>${escapeHtml(String(f.properties?.name ?? ''))}</strong><br/>${escapeHtml(String(f.properties?.kind ?? ''))}`)
+        .addTo(m)
+    }
+    async function load() {
+      const m = mapRef.current
+      const b = m?.getBounds()
+      if (!m || !b) return
+      const params = new URLSearchParams({
+        south: String(b.getSouth()), west: String(b.getWest()),
+        north: String(b.getNorth()), east: String(b.getEast()),
+      })
+      let data: GeoJSON.FeatureCollection
+      try {
+        const res = await fetch(`/api/overlays/anchors?${params.toString()}`)
+        if (!res.ok) return
+        data = (await res.json()).data
+      } catch {
+        return
+      }
+      const mm = mapRef.current
+      if (cancelled || !mm || !data) return
+      const apply = () => {
+        const m2 = mapRef.current
+        if (cancelled || !m2) return
+        const existing = m2.getSource(SRC) as mapboxgl.GeoJSONSource | undefined
+        if (existing) { existing.setData(data); return }
+        m2.addSource(SRC, { type: 'geojson', data })
+        m2.addLayer({
+          id: LAYER,
+          type: 'circle',
+          source: SRC,
+          paint: {
+            'circle-radius': 6,
+            'circle-stroke-width': 2,
+            'circle-stroke-color': '#fff',
+            'circle-color': ['match', ['get', 'kind'], 'hospital', '#dc2626', 'university', '#2563eb', 'station', '#059669', '#6b7280'],
+          },
+        })
+      }
+      if (mm.isStyleLoaded()) apply()
+      else mm.once('load', apply)
+    }
+    function onMoveEnd() { void load() }
+
+    if (showAnchors) {
+      void load()
+      map.on('moveend', onMoveEnd)
+      map.on('click', LAYER, onAnchorClick)
+    } else {
+      removeAll()
+    }
+    return () => {
+      cancelled = true
+      map.off('moveend', onMoveEnd)
+      map.off('click', LAYER, onAnchorClick)
+    }
+  }, [showAnchors])
+
   if (missingToken) {
     return (
       <div className="grid h-full place-items-center p-8 text-center text-sm text-gray-600">
@@ -200,17 +279,25 @@ export function MapView() {
 
       <div className="absolute left-3 top-3 z-10 w-44 space-y-2">
         <FilterPanel filters={filters} onChange={setFilters} />
-        <button
-          onClick={() => setShowDensity((v) => !v)}
-          aria-pressed={showDensity}
-          className="w-full rounded-lg bg-white/95 p-2 text-left shadow-md backdrop-blur"
-        >
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Overlay</span>
-          <span className="mt-1 flex items-center gap-2 text-sm">
+        <div className="rounded-lg bg-white/95 p-2 shadow-md backdrop-blur">
+          <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">Overlays</div>
+          <button
+            onClick={() => setShowDensity((v) => !v)}
+            aria-pressed={showDensity}
+            className="mt-1 flex w-full items-center gap-2 text-left text-sm"
+          >
             <span className={`inline-block h-3 w-3 rounded-full ${showDensity ? 'bg-orange-500' : 'bg-gray-300'}`} />
             Distress density
-          </span>
-        </button>
+          </button>
+          <button
+            onClick={() => setShowAnchors((v) => !v)}
+            aria-pressed={showAnchors}
+            className="mt-1 flex w-full items-center gap-2 text-left text-sm"
+          >
+            <span className={`inline-block h-3 w-3 rounded-full ${showAnchors ? 'bg-blue-600' : 'bg-gray-300'}`} />
+            Anchors (hospital/uni/rail)
+          </button>
+        </div>
       </div>
 
       {/* status region (announced) */}
