@@ -1,45 +1,42 @@
 @import "tailwindcss";
 
-/* ── CloudtoTerra design tokens (field-atlas / cartographic) ───────────────── */
+/* ── CloudtoTerra · "deep survey" — warm near-black field, bone ink, molten ember drench ── */
 @theme {
-  /* surfaces & ink — warm-tinted neutrals, never pure black/white */
-  --color-paper: oklch(0.972 0.008 83);
-  --color-paper-raised: oklch(0.948 0.010 83);
-  --color-paper-sunk: oklch(0.915 0.012 83);
-  --color-ink: oklch(0.255 0.018 55);
-  --color-ink-2: oklch(0.435 0.015 58);
-  --color-ink-3: oklch(0.560 0.012 60);
-  --color-line: oklch(0.255 0.018 55 / 0.16);
-  --color-line-strong: oklch(0.255 0.018 55 / 0.34);
+  --color-paper: oklch(0.205 0.014 62);        /* primary surface (deep warm ink) */
+  --color-paper-raised: oklch(0.250 0.016 62); /* raised panels / map chrome */
+  --color-paper-sunk: oklch(0.165 0.012 62);   /* insets, chips */
+  --color-ink: oklch(0.945 0.012 86);          /* primary text (warm bone) */
+  --color-ink-2: oklch(0.770 0.014 84);        /* secondary */
+  --color-ink-3: oklch(0.600 0.014 76);        /* muted labels */
+  --color-line: oklch(0.945 0.012 86 / 0.13);
+  --color-line-strong: oklch(0.945 0.012 86 / 0.30);
 
-  /* cartographic legend triad (keep in sync with src/lib/ui.ts) */
-  --color-land: oklch(0.66 0.095 80);
-  --color-building: oklch(0.585 0.125 48);
-  --color-civic: oklch(0.520 0.070 140);
+  /* glowing legend triad — distinct hues that read on warm-dark */
+  --color-land: oklch(0.82 0.13 92);     /* gold */
+  --color-building: oklch(0.64 0.16 33); /* clay-red */
+  --color-civic: oklch(0.76 0.11 192);   /* cyan-teal */
 
-  /* accent + thesis wash */
-  --color-ember: oklch(0.605 0.155 42);
-  --color-cloud: oklch(0.895 0.013 235);
-  --color-terra: oklch(0.86 0.030 78);
+  /* THE accent — molten ember drench */
+  --color-ember: oklch(0.72 0.18 48);
 
-  --color-danger: oklch(0.55 0.17 28);
+  --color-danger: oklch(0.66 0.19 28);
 
   --font-display: "Bricolage Grotesque", "Hanken Grotesk", system-ui, sans-serif;
   --font-sans: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-/* ── base ──────────────────────────────────────────────────────────────────── */
-:root { color-scheme: light; }
+:root { color-scheme: dark; }
 html, body { height: 100%; }
 body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.015em; }
-::selection { background: oklch(0.605 0.155 42 / 0.22); }
+h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1.02; }
+::selection { background: oklch(0.72 0.18 48 / 0.32); color: var(--color-ink); }
 
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible, input:focus-visible,
 select:focus-visible, textarea:focus-visible {
@@ -48,88 +45,83 @@ select:focus-visible, textarea:focus-visible {
   border-radius: 2px;
 }
 
-/* ── cartographic utilities ──────────────────────────────────────────────────── */
-/* survey label: tracked uppercase civic-sans */
+/* survey label + coordinates */
 .label {
   font-family: var(--font-sans);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--color-ink-3);
+  text-transform: uppercase; letter-spacing: 0.16em;
+  font-size: 0.7rem; font-weight: 600; color: var(--color-ink-3);
 }
-/* coordinates: tabular figures, never mono-costume */
 .coord { font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
 
-/* graph/survey paper grid (very faint) */
+/* faint survey grid on the dark field */
 .graticule {
   background-image:
     linear-gradient(var(--color-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
-  background-size: 28px 28px;
-  background-position: -1px -1px;
+  background-size: 30px 30px; background-position: -1px -1px;
 }
 
-/* the literal thesis: cool cloud resolving into warm terra */
+/* the thesis, inverted: deep night sky resolving into ember-warmed ground */
 .cloud-to-land {
   background:
-    linear-gradient(180deg,
-      var(--color-cloud) 0%,
-      var(--color-paper) 46%,
-      var(--color-terra) 100%);
+    radial-gradient(115% 80% at 80% 14%, oklch(0.72 0.18 48 / 0.20), transparent 58%),
+    linear-gradient(180deg, oklch(0.165 0.022 250) 0%, var(--color-paper) 50%, oklch(0.30 0.07 46) 150%);
 }
 
-/* crisp atlas buttons — never pills */
+/* ember beacon glow + live radar sweep (hero signature) */
+.beacon {
+  background: radial-gradient(circle, oklch(0.72 0.18 48 / 0.55) 0%, transparent 68%);
+  filter: blur(6px);
+}
+@keyframes ctt-sweep { to { transform: rotate(360deg); } }
+.radar-sweep {
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, oklch(0.72 0.18 48 / 0.30) 26deg, transparent 58deg);
+  animation: ctt-sweep 7s linear infinite;
+}
+.glow-ember { color: var(--color-ember); text-shadow: 0 0 26px oklch(0.72 0.18 48 / 0.55); }
+
+/* buttons — primary is the ember drench, glowing */
 .btn-ink {
   display: inline-flex; align-items: center; gap: 0.5rem;
-  background: var(--color-ink); color: var(--color-paper);
-  padding: 0.7rem 1.15rem; border-radius: 3px;
-  font-weight: 600; font-size: 0.95rem;
-  transition: background 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1);
+  background: var(--color-ember); color: oklch(0.17 0.02 50);
+  padding: 0.72rem 1.2rem; border-radius: 3px; font-weight: 700; font-size: 0.95rem;
+  box-shadow: 0 0 0 0 oklch(0.72 0.18 48 / 0);
+  transition: filter 200ms cubic-bezier(0.22,1,0.36,1), box-shadow 240ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1);
 }
-.btn-ink:hover { background: var(--color-ember); }
+.btn-ink:hover { filter: brightness(1.08); box-shadow: 0 8px 30px oklch(0.72 0.18 48 / 0.40); transform: translateY(-1px); }
 .btn-ghost {
   display: inline-flex; align-items: center; gap: 0.5rem;
   background: transparent; color: var(--color-ink);
-  padding: 0.7rem 1.15rem; border-radius: 3px;
-  border: 1px solid var(--color-line-strong); font-weight: 600; font-size: 0.95rem;
-  transition: background 200ms cubic-bezier(0.22,1,0.36,1);
+  padding: 0.72rem 1.2rem; border-radius: 3px; border: 1px solid var(--color-line-strong);
+  font-weight: 600; font-size: 0.95rem; transition: background 200ms cubic-bezier(0.22,1,0.36,1), border-color 200ms;
 }
-.btn-ghost:hover { background: var(--color-paper-sunk); }
+.btn-ghost:hover { background: var(--color-paper-raised); border-color: var(--color-ember); }
 
-/* coordinate / taxonomy chip */
 .chip {
   display: inline-flex; align-items: center; gap: 0.4rem;
   border: 1px solid var(--color-line); background: var(--color-paper-sunk);
-  padding: 0.15rem 0.5rem; border-radius: 3px;
-  font-size: 0.72rem; letter-spacing: 0.04em;
+  padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.72rem; letter-spacing: 0.04em; color: var(--color-ink-2);
 }
 
-/* reveal: fade-up, honored only when motion is allowed */
-@keyframes ctt-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-.rise { animation: ctt-rise 520ms cubic-bezier(0.16,1,0.3,1) both; }
-
-/* hero contour line draw */
-@keyframes ctt-draw { to { stroke-dashoffset: 0; } }
-.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: ctt-draw 1600ms cubic-bezier(0.16,1,0.3,1) forwards; }
+@keyframes ctt-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.rise { animation: ctt-rise 560ms cubic-bezier(0.16,1,0.3,1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .rise, .draw { animation: none; }
-  .draw { stroke-dashoffset: 0; }
+  .rise { animation: none; }
+  .radar-sweep { animation: none; }
   * { scroll-behavior: auto !important; }
 }
 
-/* mapbox popups read as paper survey notes */
+/* mapbox popups as dark survey notes */
 .mapboxgl-popup-content {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  padding: 12px 14px;
-  background: var(--color-paper);
-  color: var(--color-ink);
-  border: 1px solid var(--color-line-strong);
-  border-radius: 4px;
-  box-shadow: 0 6px 22px oklch(0.255 0.018 55 / 0.14);
+  font-family: var(--font-sans); font-size: 13px; padding: 12px 14px;
+  background: var(--color-paper-raised); color: var(--color-ink);
+  border: 1px solid var(--color-line-strong); border-radius: 4px;
+  box-shadow: 0 10px 30px oklch(0 0 0 / 0.5);
 }
 .mapboxgl-popup-content a { color: var(--color-ember); font-weight: 700; }
 .mapboxgl-popup-tip { display: none; }
-.mapboxgl-ctrl-group { border: 1px solid var(--color-line-strong) !important; border-radius: 4px !important; }
+.mapboxgl-ctrl-group { background: var(--color-paper-raised) !important; border: 1px solid var(--color-line-strong) !important; border-radius: 4px !important; }
+.mapboxgl-ctrl-group button + button { border-top: 1px solid var(--color-line) !important; }
+.mapboxgl-ctrl button .mapboxgl-ctrl-icon { filter: invert(1) hue-rotate(180deg); }

@@ -74,7 +74,8 @@ export function SubmissionModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-ink/35 p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 grid place-items-center p-4 backdrop-blur-[2px]"
+      style={{ background: 'oklch(0.12 0.012 60 / 0.66)' }}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div

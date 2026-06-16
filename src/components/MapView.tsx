@@ -60,8 +60,8 @@ export function MapView() {
       el.setAttribute('aria-label', `${TYPE_LABELS[n.type]}: ${n.nodeName}`)
       el.textContent = TYPE_EMOJI[n.type] // glyph so type isn't conveyed by colour alone
       el.style.cssText =
-        `display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:2px solid var(--color-paper);` +
-        `box-shadow:0 1px 5px oklch(0.255 0.018 55 / 0.45);cursor:pointer;font-size:12px;line-height:1;padding:0;background:${TYPE_COLORS[n.type]}`
+        `display:grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1.5px solid oklch(0.96 0.01 86 / 0.9);` +
+        `box-shadow:0 0 12px ${TYPE_COLORS[n.type]},0 1px 4px oklch(0 0 0 / 0.55);cursor:pointer;font-size:11px;line-height:1;padding:0;background:${TYPE_COLORS[n.type]}`
       const popup = new mapboxgl.Popup({ offset: 16 }).setHTML(
         `<strong>${escapeHtml(n.nodeName)}</strong><br/>${escapeHtml(TYPE_LABELS[n.type])} · ${escapeHtml(n.subType)}` +
           `${n.condition ? ` · ${escapeHtml(n.condition)}` : ''}<br/><a href="/node/${encodeURIComponent(n.id)}">View →</a>`,
@@ -79,7 +79,7 @@ export function MapView() {
     mapboxgl.accessToken = TOKEN
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: 'mapbox://styles/mapbox/dark-v11',
       center: [-78.87, 42.88],
       zoom: 4,
     })
