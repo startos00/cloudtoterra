@@ -26,6 +26,7 @@ export function MapView() {
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
   const [count, setCount] = useState(0)
   const [missingToken] = useState(!TOKEN)
+  const [showDensity, setShowDensity] = useState(false)
 
   const fetchNodes = useCallback(async (): Promise<PublicNode[]> => {
     const p = new URLSearchParams()
@@ -126,6 +127,62 @@ export function MapView() {
     }
   }, [addType])
 
+  // distress-density heatmap overlay (self-derived from approved nodes)
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+    let cancelled = false
+    const SRC = 'ctt-density'
+    const LAYER = 'ctt-density-heat'
+
+    function removeLayer() {
+      const m = mapRef.current
+      if (!m) return
+      if (m.getLayer(LAYER)) m.removeLayer(LAYER)
+      if (m.getSource(SRC)) m.removeSource(SRC)
+    }
+
+    async function add() {
+      let data: GeoJSON.FeatureCollection
+      try {
+        const res = await fetch('/api/overlays/density')
+        if (!res.ok) return
+        data = (await res.json()).data
+      } catch {
+        return
+      }
+      const m = mapRef.current
+      if (cancelled || !m) return
+      const apply = () => {
+        const mm = mapRef.current
+        if (cancelled || !mm) return
+        const existing = mm.getSource(SRC) as mapboxgl.GeoJSONSource | undefined
+        if (existing) {
+          existing.setData(data)
+          return
+        }
+        mm.addSource(SRC, { type: 'geojson', data })
+        mm.addLayer({
+          id: LAYER,
+          type: 'heatmap',
+          source: SRC,
+          paint: {
+            'heatmap-weight': ['get', 'weight'],
+            'heatmap-intensity': 1,
+            'heatmap-radius': 28,
+            'heatmap-opacity': 0.65,
+          },
+        })
+      }
+      if (m.isStyleLoaded()) apply()
+      else m.once('load', apply)
+    }
+
+    if (showDensity) void add()
+    else removeLayer()
+    return () => { cancelled = true }
+  }, [showDensity])
+
   if (missingToken) {
     return (
       <div className="grid h-full place-items-center p-8 text-center text-sm text-gray-600">
@@ -141,7 +198,20 @@ export function MapView() {
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
 
-      <div className="absolute left-3 top-3 z-10 w-44"><FilterPanel filters={filters} onChange={setFilters} /></div>
+      <div className="absolute left-3 top-3 z-10 w-44 space-y-2">
+        <FilterPanel filters={filters} onChange={setFilters} />
+        <button
+          onClick={() => setShowDensity((v) => !v)}
+          aria-pressed={showDensity}
+          className="w-full rounded-lg bg-white/95 p-2 text-left shadow-md backdrop-blur"
+        >
+          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">Overlay</span>
+          <span className="mt-1 flex items-center gap-2 text-sm">
+            <span className={`inline-block h-3 w-3 rounded-full ${showDensity ? 'bg-orange-500' : 'bg-gray-300'}`} />
+            Distress density
+          </span>
+        </button>
+      </div>
 
       {/* status region (announced) */}
       <div aria-live="polite" className="absolute right-3 top-3 z-10 max-w-[14rem] text-right text-xs">
