@@ -5,35 +5,27 @@ import { useEffect, useRef, useState } from 'react'
 type Mode = 'A' | 'B' | 'C' | 'D'
 
 const FIGS: { key: Mode; tab: string; title: string; caption: string }[] = [
-  { key: 'A', tab: 'Fig. A', title: 'Footprints', caption: 'Dormant building footprints in plan, a figure-ground of the quiet city. Move across the field to select a structure waiting to be brought back into use.' },
-  { key: 'B', tab: 'Fig. B', title: 'Civic Front', caption: 'The civic asset nobody else maps: courthouse, library, hall. Its colonnade and pediment, drawn as elevation, often the finest building in town and left between identities.' },
-  { key: 'C', tab: 'Fig. C', title: 'Urban Fabric', caption: 'Blocks and streets as figure-ground. A single catalyst opens the fabric around it; the grid does not break, it accommodates the change.' },
-  { key: 'D', tab: 'Fig. D', title: 'Reactivation', caption: 'An elevation of the block. Pass over it and dormant structures rise and light their windows, the city waking one parcel at a time.' },
+  { key: 'A', tab: 'Fig. A', title: 'Parcellation', caption: 'Territory divides and re-divides. Move across the field and the grain refines around you, the way attention subdivides a place the moment it is seen.' },
+  { key: 'B', tab: 'Fig. B', title: 'Flow', caption: 'Civic-pattern flows across the ground, migration, capital, footfall. The streams bend into a vortex around a catalyst, the way a place turns once it is reactivated.' },
+  { key: 'C', tab: 'Fig. C', title: 'Adjacency', caption: 'Assets and institutions as a network of nearest relations. Pull a node and the web of adjacencies flexes; in a field condition, nothing stands alone.' },
+  { key: 'D', tab: 'Fig. D', title: 'Aggregation', caption: 'Opportunity packs into the gaps, each disk a territory sized by its room to grow. The one beneath your cursor is the one being claimed.' },
 ]
 
 const THUMBS: Record<Mode, React.ReactNode> = {
-  // footprints (figure-ground plan)
-  A: (<g fill="currentColor" stroke="none">{[[18, 18], [52, 16], [16, 50], [54, 52]].map(([x, y], i) => <rect key={i} x={x} y={y} width="26" height="26" />)}</g>),
-  // civic front: pediment + columns + base
-  B: (<g stroke="currentColor" strokeWidth="3" fill="none">
-    <path d="M 16 42 L 50 18 L 84 42" />
-    {[28, 42, 58, 72].map((x, i) => <line key={i} x1={x} y1="46" x2={x} y2="78" />)}
-    <line x1="14" y1="84" x2="86" y2="84" />
-  </g>),
-  // urban fabric: blocks with street gaps
-  C: (<g fill="currentColor" stroke="none">{[[14, 14], [54, 14], [14, 54], [54, 54]].map(([x, y], i) => <rect key={i} x={x} y={y} width="32" height="32" />)}</g>),
-  // skyline elevation
-  D: (<g fill="currentColor" stroke="none">{[[16, 60, 40], [34, 38, 62], [54, 70, 30], [70, 50, 50]].map(([x, y, hh], i) => <rect key={i} x={x} y={y} width="12" height={hh} />)}</g>),
+  A: (<g stroke="currentColor" fill="none" strokeWidth="3"><rect x="12" y="12" width="76" height="76" /><line x1="50" y1="12" x2="50" y2="88" /><line x1="50" y1="50" x2="88" y2="50" /><line x1="12" y1="68" x2="50" y2="68" /><line x1="31" y1="50" x2="31" y2="88" /></g>),
+  B: (<g stroke="currentColor" fill="none" strokeWidth="3"><path d="M10 28 Q 50 6 90 34" /><path d="M10 52 Q 50 74 90 50" /><path d="M10 76 Q 50 58 90 80" /></g>),
+  C: (<g stroke="currentColor" strokeWidth="2.5"><line x1="24" y1="30" x2="60" y2="22" /><line x1="60" y1="22" x2="78" y2="56" /><line x1="78" y1="56" x2="40" y2="74" /><line x1="40" y1="74" x2="24" y2="30" /><line x1="24" y1="30" x2="78" y2="56" />{[[24, 30], [60, 22], [78, 56], [40, 74]].map(([x, y], i) => <circle key={i} cx={x} cy={y} r="4" fill="currentColor" stroke="none" />)}</g>),
+  D: (<g stroke="currentColor" fill="none" strokeWidth="3"><circle cx="36" cy="40" r="24" /><circle cx="70" cy="62" r="16" /><circle cx="68" cy="26" r="11" /><circle cx="28" cy="74" r="10" /></g>),
 }
 
 export function FieldStage() {
   const [active, setActive] = useState<Mode>('A')
-  const [density, setDensity] = useState(58)
-  const [scale, setScale] = useState(54)
+  const [density, setDensity] = useState(52)
+  const [scale, setScale] = useState(56)
   const [cursor, setCursor] = useState('0.000, 0.000')
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const params = useRef({ density: 58, scale: 54, mx: -999, my: -999, hover: false })
+  const params = useRef({ density: 52, scale: 56, mx: -999, my: -999, hover: false })
 
   useEffect(() => { params.current.density = density; params.current.scale = scale }, [density, scale])
 
@@ -66,79 +58,74 @@ export function FieldStage() {
       const { density: d, scale: s, mx, my, hover } = params.current
       const dens = d / 100, sc = 0.7 + (s / 100) * 0.8
       ctx.clearRect(0, 0, w, h)
-      ctx.strokeStyle = '#000'; ctx.fillStyle = '#000'; ctx.lineWidth = 1.4
+      ctx.strokeStyle = '#000'; ctx.fillStyle = '#000'; ctx.lineWidth = 1
 
       if (active === 'A') {
-        // figure-ground footprints; cursor selects one
-        const cols = 4 + Math.floor(dens * 8)
-        const rows = Math.max(3, Math.round((cols * h) / w))
-        const cw = w / cols, ch = h / rows
-        for (let j = 0; j < rows; j++) {
-          for (let i = 0; i < cols; i++) {
-            const seed = i * 73.3 + j * 131.7
-            const inset = (0.26 - sc * 0.09) + rnd(seed) * 0.08
-            const fx = i * cw + cw * inset, fy = j * ch + ch * inset
-            const fw = cw * (1 - 2 * inset), fh = ch * (1 - 2 * inset)
-            const sel = hover && mx >= i * cw && mx < (i + 1) * cw && my >= j * ch && my < (j + 1) * ch
-            if (sel) ctx.fillRect(fx, fy, fw, fh)
-            else ctx.strokeRect(fx, fy, fw, fh)
-          }
+        const minLeaf = 16 + (1 - dens) * 44
+        const subdivide = (x: number, y: number, wd: number, ht: number, depth: number) => {
+          const cx = x + wd / 2, cy = y + ht / 2
+          let target = 2 + Math.floor(dens * 3)
+          if (hover) { const dist = Math.hypot(cx - mx, cy - my); if (dist < 220) target += Math.round((1 - dist / 220) * 4) }
+          if (depth >= target || wd < minLeaf * 1.5 || ht < minLeaf * 1.5) { ctx.strokeRect(x + 2, y + 2, wd - 4, ht - 4); return }
+          const seed = Math.floor(x * 0.7) + Math.floor(y * 0.5) * 7 + depth * 131
+          const r = 0.34 + rnd(seed) * 0.32
+          if (wd >= ht) { const sp = wd * r; subdivide(x, y, sp, ht, depth + 1); subdivide(x + sp, y, wd - sp, ht, depth + 1) }
+          else { const sp = ht * r; subdivide(x, y, wd, sp, depth + 1); subdivide(x, y + sp, wd, ht - sp, depth + 1) }
         }
+        subdivide(0, 0, w, h, 0)
       } else if (active === 'B') {
-        // civic facade: steps, colonnade, entablature, pediment; cursor lights a column
-        const ncol = 4 + Math.floor(dens * 8)
-        const fw = Math.min(w * 0.82, w * 0.5 * sc * 1.5)
-        const fh = h * 0.46
-        const x0 = (w - fw) / 2
-        const baseY = h * 0.80
-        const topY = baseY - fh
-        for (let k = 0; k < 3; k++) ctx.strokeRect(x0 - (2 - k) * 12, baseY + k * 7, fw + (2 - k) * 24, 6)
-        const gap = fw / ncol
-        for (let c = 0; c < ncol; c++) {
-          const cx = x0 + gap * (c + 0.5)
-          const cwid = Math.min(gap * 0.46, 12)
-          const sel = hover && Math.abs(mx - cx) < gap / 2 && my > topY && my < baseY
-          if (sel) ctx.fillRect(cx - cwid / 2, topY + fh * 0.18, cwid, fh * 0.82)
-          else ctx.strokeRect(cx - cwid / 2, topY + fh * 0.18, cwid, fh * 0.82)
+        const field = (x: number, y: number) => {
+          let a = (Math.sin(x * 0.006 + y * 0.004) + Math.cos(y * 0.0075 - x * 0.0035)) * Math.PI
+          if (hover) { const dx = x - mx, dy = y - my, dist = Math.hypot(dx, dy); if (dist < 190) { const wgt = 1 - dist / 190; a = a * (1 - wgt) + (Math.atan2(dy, dx) + Math.PI * 0.5) * wgt } }
+          return a
         }
-        ctx.strokeRect(x0, topY + fh * 0.08, fw, fh * 0.1)
-        ctx.beginPath(); ctx.moveTo(x0 - 6, topY + fh * 0.08); ctx.lineTo(x0 + fw / 2, topY - fh * 0.16); ctx.lineTo(x0 + fw + 6, topY + fh * 0.08); ctx.closePath(); ctx.stroke()
+        const step = Math.max(14, 30 - dens * 14)
+        const len = Math.floor(16 + dens * 30)
+        for (let sy = step * 0.6; sy < h; sy += step) {
+          for (let sx = step * 0.6; sx < w; sx += step) {
+            let px = sx, py = sy
+            ctx.beginPath(); ctx.moveTo(px, py)
+            for (let i = 0; i < len; i++) { const a = field(px, py); px += Math.cos(a) * 4 * sc; py += Math.sin(a) * 4 * sc; if (px < -2 || px > w + 2 || py < -2 || py > h + 2) break; ctx.lineTo(px, py) }
+            ctx.stroke()
+          }
+        }
       } else if (active === 'C') {
-        // urban fabric: solid blocks with street gaps, opening around the cursor
-        const cols = 4 + Math.floor(dens * 6)
+        const cols = Math.round(4 + dens * 5)
         const rows = Math.max(3, Math.round((cols * h) / w))
         const cw = w / cols, ch = h / rows
-        const street = 7
+        const pts: { x: number; y: number }[] = []
         for (let j = 0; j < rows; j++) {
           for (let i = 0; i < cols; i++) {
-            const cx = i * cw + cw / 2, cy = j * ch + ch / 2
-            let open = 0
-            if (hover) { const dist = Math.hypot(cx - mx, cy - my); if (dist < 130) open = (1 - dist / 130) * Math.min(cw, ch) * 0.5 }
-            const bx = i * cw + street / 2 + open / 2, by = j * ch + street / 2 + open / 2
-            const bw = cw - street - open, bh = ch - street - open
-            if (bw > 2 && bh > 2) ctx.fillRect(bx, by, bw * sc, bh * sc)
+            const seed = i * 31.1 + j * 57.7
+            let bx = (i + 0.5) * cw + (rnd(seed) - 0.5) * cw * 0.6
+            let by = (j + 0.5) * ch + (rnd(seed + 9) - 0.5) * ch * 0.6
+            if (hover) { const dx = mx - bx, dy = my - by, dist = Math.hypot(dx, dy); if (dist < 170 && dist > 0) { const f = (1 - dist / 170) * 46; bx += (dx / dist) * f; by += (dy / dist) * f } }
+            pts.push({ x: bx, y: by })
           }
         }
+        const R = Math.max(cw, ch) * 1.5
+        for (let a = 0; a < pts.length; a++) {
+          for (let b = a + 1; b < pts.length; b++) {
+            const dx = pts[a].x - pts[b].x, dy = pts[a].y - pts[b].y, dist = Math.hypot(dx, dy)
+            if (dist < R) { ctx.globalAlpha = Math.max(0.12, 1 - dist / R); ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke() }
+          }
+        }
+        ctx.globalAlpha = 1
+        for (const p of pts) { ctx.beginPath(); ctx.arc(p.x, p.y, 2.2 * sc, 0, Math.PI * 2); ctx.fill() }
       } else {
-        // reactivation skyline: structures rise + windows light near the cursor
-        const N = 6 + Math.floor(dens * 12)
-        const bw = w / N
-        for (let i = 0; i < N; i++) {
-          const seed = i * 51.7
-          let bh = h * (0.16 + rnd(seed) * 0.32) * sc
-          const cx = i * bw + bw / 2
-          let lit = 0
-          if (hover) { const dist = Math.abs(cx - mx); if (dist < 150) { lit = 1 - dist / 150; bh += lit * h * 0.24 } }
-          bh = Math.min(bh, h * 0.92)
-          const bx = i * bw + bw * 0.14, by = h - bh, bwid = bw * 0.72
-          ctx.strokeRect(bx, by, bwid, bh)
-          for (let wy = by + 8; wy < h - 6; wy += 13) {
-            for (let wx = bx + 5; wx < bx + bwid - 4; wx += 9) {
-              if (lit > 0.15 && rnd(wx * 3.1 + wy * 7.7) < lit) ctx.fillRect(wx, wy, 3.5, 5)
-              else { ctx.strokeRect(wx, wy, 3.5, 5) }
-            }
-          }
+        const minR = 6 + (1 - dens) * 14
+        const maxR = Math.min(w, h) * 0.16 * sc
+        const circles: { x: number; y: number; r: number }[] = []
+        for (let k = 0; k < 260; k++) {
+          const x = rnd(k * 1.7 + 0.3) * w, y = rnd(k * 2.9 + 3.1) * h
+          let r = maxR
+          for (const c of circles) { const dd = Math.hypot(x - c.x, y - c.y) - c.r; if (dd < r) r = dd }
+          r = Math.min(r, x - 2, w - x - 2, y - 2, h - y - 2)
+          if (r >= minR) circles.push({ x, y, r: Math.min(r, maxR) })
         }
+        let sel = -1, best = 1e9
+        if (hover) for (let i = 0; i < circles.length; i++) { const dd = Math.hypot(circles[i].x - mx, circles[i].y - my); if (dd < circles[i].r && dd < best) { best = dd; sel = i } }
+        circles.forEach((c, i) => { ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); if (i === sel) ctx.fill(); else ctx.stroke() })
       }
       raf = requestAnimationFrame(draw)
     }
