@@ -4,30 +4,54 @@ P1 (the crowd-map core) is **built, committed locally, and verified** (35 commit
 tests + clean typecheck/lint + a passing production build). Everything below needs *you* —
 it's outward-facing, costs money, or requires your accounts. I deliberately did none of it.
 
-## Must do to go live
+## Must do to go live  (each needs your accounts / payment — I can't do these for you)
 
-1. **Buy the domain** — `cloudtoterra.land` (verify availability at a registrar).
-2. **Create the GitHub repo** (public, since it's open source) and push — the repo is local-only right now:
+1. **Buy the domain `cloudtoterra.land`.** `.land` is sold by Cloudflare Registrar, Porkbun, and
+   Namecheap (~$25–35/yr). Cloudflare Registrar is at-cost with the easiest DNS. (Registration needs
+   your registrar account + card, so it's yours to do — takes ~5 min.)
+
+2. **Push to GitHub** (public — it's AGPL); the repo is local-only right now:
    ```bash
    cd ~/dev/cloudtoterra
-   gh repo create cloudtoterra --public --source=. --remote=origin --push   # or set your own remote
+   gh repo create cloudtoterra --public --source=. --remote=origin --push
    ```
-3. **Complete the LICENSE** — only the AGPL notice header was written (network fetch was blocked):
+
+3. **Finish the LICENSE** (only the AGPL header is in; network was blocked here):
    ```bash
    curl -fsSL https://www.gnu.org/licenses/agpl-3.0.txt >> LICENSE
    ```
-4. **Provision a Neon Postgres DB**, put its URL in `.env.local` as `DATABASE_URL`, then:
+
+4. **Provision a Neon Postgres DB** → set `DATABASE_URL` (Vercel + `.env.local`), then migrate:
    ```bash
-   pnpm db:migrate          # applies drizzle/0000_*.sql
-   DATABASE_URL=... pnpm db:seed   # optional: 8 demo nodes
+   pnpm db:migrate          # applies drizzle/0000_* and 0001_* (adds model_3d_url + featured)
+   pnpm db:seed             # optional demo nodes
    ```
-5. **Set real admin secrets** in `.env.local` (and Vercel):
+   Without `DATABASE_URL` the app uses an in-memory dev DB (fine locally; resets on restart).
+
+5. **Create a Vercel Blob store** (project → Storage → Blob) for property photos. Linking it sets
+   `BLOB_READ_WRITE_TOKEN` automatically; then set `NEXT_PUBLIC_BLOB_ENABLED=1` so the browser uploads
+   photos to Blob. Without it, photos fall back to inline base64 (works, but not for scale).
+
+6. **Set real admin secrets** (Vercel env + local) — current values are dev placeholders
+   (`changeme-dev` / `dev-secret-change-me-please`):
    ```bash
-   openssl rand -base64 32   # use for ADMIN_SESSION_SECRET; pick a strong ADMIN_PASSWORD
+   openssl rand -base64 32   # → ADMIN_SESSION_SECRET ; pick a strong ADMIN_PASSWORD
    ```
-6. **Deploy to Vercel** — new project from the repo (separate from Nubis), set the 4 env vars,
-   then attach `cloudtoterra.land`. (Per your memory note, deploy via git push, not the local
-   `vercel` CLI — the memory-monitor LaunchAgent SIGKILLs CLI uploads.)
+
+7. **Deploy to Vercel** (new project, separate from Nubis) with env vars:
+   `DATABASE_URL`, `NEXT_PUBLIC_MAPBOX_TOKEN`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`,
+   `BLOB_READ_WRITE_TOKEN`, `NEXT_PUBLIC_BLOB_ENABLED=1`, `NEXT_PUBLIC_APP_URL=https://cloudtoterra.land`.
+   Deploy via **git push** (your memory note: the local `vercel` CLI gets SIGKILLed by the memory-monitor).
+
+8. **Attach the domain** in Vercel → Project → Domains → add `cloudtoterra.land`, then set the DNS
+   records Vercel shows at your registrar (or point nameservers if using Cloudflare Registrar).
+
+### Featured properties + 3D models
+Detail pages (`/node/[id]`) render a Three.js view: an uploaded **GLB** when present, otherwise a
+procedural massing built from the property (land extrudes its drawn footprint). To feature a property
+with your own model: host the `.glb` (the Blob store or any public URL), then in `/admin` paste the
+**3D model URL** and tick **Featured** when you approve it. (AI auto-generation of a three.js scene
+from property detail is a later step — the procedural massing is the deterministic v1.)
 
 ## Run it locally right now
 
