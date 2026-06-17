@@ -1,6 +1,23 @@
 import { z } from 'zod'
 import { NODE_TYPES, CONDITIONS, SOCIETY_TAGS, isValidSubType } from './taxonomy'
 
+// A photo is either a remote http(s) URL or an inline base64 image the user
+// uploaded from their device (downscaled client-side). Cap inline length so a
+// row can't be bloated — production swaps these for object-storage URLs.
+export const PHOTO_MAX_LEN = 1_500_000 // ~1.1 MB of binary once base64-decoded
+
+export function isAcceptablePhoto(u: string): boolean {
+  if (typeof u !== 'string' || u.length === 0 || u.length > PHOTO_MAX_LEN) return false
+  try {
+    const proto = new URL(u).protocol
+    if (proto === 'http:' || proto === 'https:') return true
+    if (proto === 'data:') return /^data:image\/(png|jpe?g|webp|gif|avif);base64,/i.test(u)
+    return false
+  } catch {
+    return false
+  }
+}
+
 export const submissionSchema = z.object({
   type: z.enum([...NODE_TYPES]),
   subType: z.string(),
@@ -8,14 +25,7 @@ export const submissionSchema = z.object({
   nodeName: z.string().min(2).max(200),
   description: z.string().max(2000).optional(),
   photoUrls: z
-    .array(
-      z.string().url().refine(
-        (u) => {
-          try { return ['http:', 'https:'].includes(new URL(u).protocol) } catch { return false }
-        },
-        'unsupported url scheme',
-      ),
-    )
+    .array(z.string().refine(isAcceptablePhoto, 'unsupported image'))
     .max(6)
     .optional(),
   latitude: z.number().min(-90).max(90),

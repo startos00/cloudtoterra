@@ -34,6 +34,7 @@ export function MapView() {
   const drawRef = useRef<MapboxDraw | null>(null)
   const markersRef = useRef<mapboxgl.Marker[]>([])
   const elsRef = useRef<Record<string, HTMLButtonElement>>({})
+  const searchMarkerRef = useRef<mapboxgl.Marker | null>(null)
   const renderGenRef = useRef(0)
 
   const [types, setTypes] = useState<NodeType[]>([...NODE_TYPES])
@@ -47,6 +48,8 @@ export function MapView() {
   const [missingToken] = useState(!TOKEN)
   const [showDensity, setShowDensity] = useState(false)
   const [showAnchors, setShowAnchors] = useState(false)
+  const [searchQ, setSearchQ] = useState('')
+  const [searching, setSearching] = useState(false)
 
   const renderMarkers = useCallback(async () => {
     const map = mapRef.current
@@ -198,6 +201,32 @@ export function MapView() {
     setTypes((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]))
   }
 
+  // address / place search via Mapbox geocoding (response is GeoJSON) → flyTo
+  async function doSearch() {
+    const q = searchQ.trim()
+    const map = mapRef.current
+    if (!q || !map || !TOKEN) return
+    setSearching(true)
+    try {
+      const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?access_token=${TOKEN}&limit=1`)
+      if (res.ok) {
+        const f = (await res.json()).features?.[0]
+        if (f?.center) {
+          const [lng, lat] = f.center as [number, number]
+          map.flyTo({ center: [lng, lat], zoom: 13, duration: 1400 })
+          searchMarkerRef.current?.remove()
+          const el = document.createElement('div')
+          el.style.cssText = 'width:14px;height:14px;border-radius:50%;border:2px solid #2c52ff;background:rgba(44,82,255,.25)'
+          searchMarkerRef.current = new mapboxgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map)
+        }
+      }
+    } catch {
+      /* geocoding unavailable */
+    } finally {
+      setSearching(false)
+    }
+  }
+
   if (missingToken) {
     return (
       <div className="grid h-full place-items-center p-8 text-center text-sm text-ink-2">
@@ -212,6 +241,22 @@ export function MapView() {
   return (
     <div className="relative h-full w-full overflow-hidden">
       <div ref={containerRef} className="h-full w-full" />
+
+      {/* address search */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); void doSearch() }}
+        className="glass absolute left-1/2 top-4 z-10 flex w-[min(90vw,26rem)] -translate-x-1/2 items-center gap-2 px-3 py-2"
+      >
+        <span className="meta shrink-0">Find</span>
+        <input
+          value={searchQ}
+          onChange={(e) => setSearchQ(e.target.value)}
+          placeholder="Search an address or place…"
+          aria-label="Search an address or place"
+          className="w-full bg-transparent text-sm outline-none placeholder:text-ink-3"
+        />
+        <button type="submit" className="meta shrink-0 hover:text-[color:var(--color-accent)]">{searching ? '…' : 'Go'}</button>
+      </form>
 
       {/* brand + count */}
       <div className="glass absolute left-4 top-4 z-10 px-4 py-3">
@@ -268,7 +313,7 @@ export function MapView() {
       </div>
 
       {toast && (
-        <div className="glass absolute left-1/2 top-4 z-30 -translate-x-1/2 px-4 py-2 text-sm" role="status" style={{ borderColor: ACCENT }}>{toast}</div>
+        <div className="glass absolute left-1/2 top-20 z-30 -translate-x-1/2 px-4 py-2 text-sm" role="status" style={{ borderColor: ACCENT }}>{toast}</div>
       )}
 
       {/* inspector */}
@@ -286,6 +331,15 @@ export function MapView() {
             {isCurated(selected.id) && <span className="chip" style={{ borderColor: ACCENT, color: ACCENT }}>Curated</span>}
           </div>
           {selected.description && <p className="mt-3 text-sm leading-relaxed text-ink-2">{selected.description}</p>}
+          {selected.photoUrls && selected.photoUrls.length > 0 && (
+            <div className="mt-3 grid grid-cols-3 gap-1.5">
+              {selected.photoUrls.map((u, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={i} src={u} alt={`${selected.nodeName} — photo ${i + 1}`}
+                  className="aspect-square w-full rounded border border-ink/15 object-cover" />
+              ))}
+            </div>
+          )}
           {!isCurated(selected.id) && (
             <a href={`/node/${encodeURIComponent(selected.id)}`} className="btn-ink mt-4">Open detail</a>
           )}

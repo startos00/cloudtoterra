@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { submissionSchema } from './validation'
+import { submissionSchema, isAcceptablePhoto, PHOTO_MAX_LEN } from './validation'
 
 const base = {
   type: 'building', subType: 'commercial_office', condition: 'dormant',
@@ -27,5 +27,30 @@ describe('submissionSchema', () => {
     expect(submissionSchema.safeParse({ ...base, photoUrls: ['javascript:alert(1)'] }).success).toBe(false)
     expect(submissionSchema.safeParse({ ...base, photoUrls: ['data:text/html,x'] }).success).toBe(false)
     expect(submissionSchema.safeParse({ ...base, photoUrls: ['https://example.com/a.jpg'] }).success).toBe(true)
+  })
+  it('accepts device-uploaded base64 images', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg=='
+    const jpg = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ=='
+    expect(submissionSchema.safeParse({ ...base, photoUrls: [png, jpg] }).success).toBe(true)
+  })
+  it('caps the number of photos at 6', () => {
+    const one = 'https://example.com/a.jpg'
+    expect(submissionSchema.safeParse({ ...base, photoUrls: Array(7).fill(one) }).success).toBe(false)
+  })
+})
+
+describe('isAcceptablePhoto', () => {
+  it('accepts http(s) and base64 image data urls', () => {
+    expect(isAcceptablePhoto('https://example.com/a.jpg')).toBe(true)
+    expect(isAcceptablePhoto('data:image/webp;base64,AAAA')).toBe(true)
+  })
+  it('rejects non-image data urls and bad schemes', () => {
+    expect(isAcceptablePhoto('data:text/html,x')).toBe(false)
+    expect(isAcceptablePhoto('javascript:alert(1)')).toBe(false)
+    expect(isAcceptablePhoto('not a url')).toBe(false)
+  })
+  it('rejects oversized inline images', () => {
+    const huge = 'data:image/png;base64,' + 'A'.repeat(PHOTO_MAX_LEN)
+    expect(isAcceptablePhoto(huge)).toBe(false)
   })
 })

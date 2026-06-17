@@ -58,6 +58,15 @@ export function AdminQueue({ initial }: { initial: Item[] }) {
                   {n.city && <span className="chip">{n.city}</span>}
                 </div>
                 {n.description && <p className="mt-2 text-sm text-ink-2">{n.description}</p>}
+                {n.photoUrls && n.photoUrls.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {n.photoUrls.map((u, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={i} src={u} alt={`${n.nodeName} — photo ${i + 1}`}
+                        className="h-16 w-16 rounded border border-line object-cover" />
+                    ))}
+                  </div>
+                )}
                 <a
                   className="label mt-2 inline-block normal-case tracking-wide text-ink-3 hover:text-ember"
                   style={{ textTransform: 'none' }}

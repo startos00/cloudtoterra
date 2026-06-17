@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { SUB_TYPES, CONDITIONS, type NodeType } from '@/lib/taxonomy'
 import { TYPE_LABELS, prettySub } from '@/lib/ui'
+import { fileToDownscaledDataUrl } from '@/lib/image'
+
+const MAX_PHOTOS = 6
 
 const fieldCls = 'mt-1 w-full rounded border border-line bg-paper p-2 text-ink'
 
@@ -23,6 +26,9 @@ export function SubmissionModal({
   const [website, setHp] = useState('') // honeypot
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<string[]>([])
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const [photoNote, setPhotoNote] = useState<string | null>(null)
 
   const dialogRef = useRef<HTMLDivElement>(null)
   const firstFieldRef = useRef<HTMLSelectElement>(null)
@@ -47,6 +53,26 @@ export function SubmissionModal({
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onClose])
 
+  async function addFiles(files: FileList | null) {
+    if (!files || files.length === 0) return
+    const all = Array.from(files)
+    const imgs = all.filter((f) => f.type.startsWith('image/'))
+    setPhotoNote(null)
+    setPhotoBusy(true)
+    try {
+      const room = MAX_PHOTOS - photos.length
+      const encoded: string[] = []
+      for (const f of imgs.slice(0, room)) {
+        try { encoded.push(await fileToDownscaledDataUrl(f)) } catch { /* skip undecodable */ }
+      }
+      if (encoded.length) setPhotos((p) => [...p, ...encoded].slice(0, MAX_PHOTOS))
+      if (all.length > imgs.length) setPhotoNote('Skipped non-image files.')
+      else if (imgs.length > room) setPhotoNote(`Only ${MAX_PHOTOS} photos allowed.`)
+    } finally {
+      setPhotoBusy(false)
+    }
+  }
+
   async function submit() {
     setBusy(true)
     setErr(null)
@@ -57,6 +83,7 @@ export function SubmissionModal({
         body: JSON.stringify({
           type, subType, condition, nodeName,
           description: description || undefined,
+          photoUrls: photos.length ? photos : undefined,
           contributorEmail: contributorEmail || undefined,
           latitude: location.lat, longitude: location.lng,
           boundary, website,
@@ -114,6 +141,44 @@ export function SubmissionModal({
         <label className="mt-3 block text-sm font-medium text-ink" htmlFor="f-desc">Description</label>
         <textarea id="f-desc" className={fieldCls} rows={2} value={description}
           onChange={(e) => setDesc(e.target.value)} placeholder="What makes this place notable?" />
+
+        <span className="mt-3 block text-sm font-medium text-ink">
+          Photos <span className="font-normal text-ink-3">(up to {MAX_PHOTOS}, optional)</span>
+        </span>
+        <label
+          className="mt-1 flex cursor-pointer flex-col items-center justify-center gap-1 rounded border border-dashed border-line-strong bg-paper px-3 py-5 text-center transition-colors hover:border-ink/40 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+          aria-disabled={photos.length >= MAX_PHOTOS}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => { e.preventDefault(); void addFiles(e.dataTransfer.files) }}
+        >
+          <input
+            type="file" accept="image/*" multiple className="sr-only"
+            disabled={photos.length >= MAX_PHOTOS}
+            onChange={(e) => { void addFiles(e.target.files); e.target.value = '' }}
+          />
+          <span className="text-sm text-ink-2">
+            {photoBusy ? 'Resizing…' : photos.length >= MAX_PHOTOS ? 'Photo limit reached' : 'Drag photos here, or click to choose'}
+          </span>
+          <span className="meta text-ink-3" style={{ textTransform: 'none' }}>
+            {photos.length}/{MAX_PHOTOS} · resized in your browser, never sent until you submit
+          </span>
+        </label>
+        {photoNote && <p className="mt-1 text-xs text-ink-3">{photoNote}</p>}
+        {photos.length > 0 && (
+          <ul className="mt-2 grid grid-cols-3 gap-2">
+            {photos.map((src, i) => (
+              <li key={i} className="group relative aspect-square overflow-hidden rounded border border-line">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
+                <button
+                  type="button" aria-label={`Remove photo ${i + 1}`}
+                  onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}
+                  className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-ink/80 text-[12px] leading-none text-paper opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                >×</button>
+              </li>
+            ))}
+          </ul>
+        )}
 
         <label className="mt-3 block text-sm font-medium text-ink" htmlFor="f-email">
           Email <span className="font-normal text-ink-3">(optional, for the approval notice)</span>
