@@ -1,10 +1,6 @@
-import { Archive } from '@/components/Archive'
+import { redirect } from 'next/navigation'
 
-export const metadata = {
-  title: 'Places — CloudtoTerra',
-  description: 'Browse the commons: dormant land, buildings, civic assets, and societies.',
-}
-
+// The grid now lives in the unified explorer at /.
 export default function PlacesPage() {
-  return <Archive />
+  redirect('/?view=grid')
 }

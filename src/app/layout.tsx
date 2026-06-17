@@ -8,11 +8,9 @@ export const metadata: Metadata = {
     'An open, public-good crowd map of dormant land, buildings, civic assets, and the societies reactivating them.',
 }
 
+// /admin is intentionally not linked here (kept reachable directly for review only).
 const NAV = [
-  { href: '/map', label: 'Map' },
-  { href: '/places', label: 'Places' },
   { href: '/about', label: 'Guide' },
-  { href: '/admin', label: 'Admin' },
 ]
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
