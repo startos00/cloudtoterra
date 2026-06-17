@@ -2,8 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { NODE_TYPES, SUB_TYPES, CONDITIONS, isValidSubType } from './taxonomy'
 
 describe('taxonomy', () => {
-  it('has exactly 3 pin types', () => {
-    expect(NODE_TYPES).toEqual(['land', 'building', 'civic'])
+  it('has the four pin types', () => {
+    expect(NODE_TYPES).toEqual(['land', 'building', 'civic', 'society'])
+  })
+  it('society sub-types include startup_society', () => {
+    expect(SUB_TYPES.society).toContain('startup_society')
   })
   it('building sub-types include whole + within-building spaces', () => {
     expect(SUB_TYPES.building).toContain('commercial_office')

@@ -1,22 +1,33 @@
 import type { NodeType, Condition } from './taxonomy'
 
-// Kept in sync with the --color-{land,building,civic} tokens in globals.css / DESIGN.md.
+// Monochrome system — node types are distinguished by glyph/letter, accent for active.
 export const TYPE_COLORS: Record<NodeType, string> = {
-  land: 'oklch(0.66 0.095 80)',
-  building: 'oklch(0.585 0.125 48)',
-  civic: 'oklch(0.520 0.070 140)',
+  land: '#111111',
+  building: '#111111',
+  civic: '#111111',
+  society: '#111111',
 }
 
 export const TYPE_LABELS: Record<NodeType, string> = {
   land: 'Land',
   building: 'Building',
   civic: 'Civic Asset',
+  society: 'Society',
+}
+
+// single-letter tags used inside monochrome map pins
+export const TYPE_LETTER: Record<NodeType, string> = {
+  land: 'L',
+  building: 'B',
+  civic: 'C',
+  society: 'S',
 }
 
 export const TYPE_EMOJI: Record<NodeType, string> = {
   land: '🟫',
   building: '🏚️',
   civic: '🏛️',
+  society: '👥',
 }
 
 // Lightweight shape the client UI consumes (subset of the DB row).

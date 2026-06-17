@@ -1,7 +1,7 @@
 // Single source of truth for the CloudtoTerra pin-drop taxonomy.
 // 3 top-level types; sub-types per type; condition is a separate axis (filter).
 
-export const NODE_TYPES = ['land', 'building', 'civic'] as const
+export const NODE_TYPES = ['land', 'building', 'civic', 'society'] as const
 export type NodeType = (typeof NODE_TYPES)[number]
 
 export const SUB_TYPES = {
@@ -14,6 +14,8 @@ export const SUB_TYPES = {
     'office_unit', 'retail_unit', 'floor_suite', 'studio_workshop', 'hall_room',
   ],
   civic: ['government', 'religious', 'educational', 'cultural', 'military', 'associational'],
+  // network societies / communities organising to reactivate places (e.g. Network School)
+  society: ['startup_society', 'network_state', 'charter_city', 'intentional_community', 'coliving', 'dao'],
 } as const satisfies Record<NodeType, readonly string[]>
 
 export const CONDITIONS = ['usable', 'dormant', 'distressed', 'derelict'] as const
