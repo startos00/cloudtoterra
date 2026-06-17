@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { NodeType } from '@/lib/taxonomy'
-import type { BuildingSpec } from '@/lib/model-spec'
+import type { BuildingSpec, Element } from '@/lib/model-spec'
 
 type Ring = [number, number][]
 
@@ -92,10 +92,47 @@ function buildMassing(kind: NodeType, boundary: unknown): THREE.Object3D {
   return group
 }
 
+function pointInPolygon(x: number, z: number, ring: [number, number][]): boolean {
+  let inside = false
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, zi] = ring[i], [xj, zj] = ring[j]
+    if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) inside = !inside
+  }
+  return inside
+}
+
+// Parcel topography: a heightfield grid clipped to the footprint polygon + draped outline.
+function buildTerrain(group: THREE.Group, el: Element) {
+  const points = el.points, cols = el.cols, rows = el.rows, ring = el.ring
+  if (!points || !cols || !rows) return
+  const pos: number[] = []
+  for (let r = 0; r < rows - 1; r++) {
+    for (let c = 0; c < cols - 1; c++) {
+      const a = points[r * cols + c], b = points[r * cols + c + 1]
+      const d = points[(r + 1) * cols + c], e = points[(r + 1) * cols + c + 1]
+      if (ring && !pointInPolygon((a[0] + e[0]) / 2, (a[2] + e[2]) / 2, ring)) continue
+      pos.push(a[0], a[1], a[2], d[0], d[1], d[2], e[0], e[1], e[2])
+      pos.push(a[0], a[1], a[2], e[0], e[1], e[2], b[0], b[1], b[2])
+    }
+  }
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  geo.computeVertexNormals()
+  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: new THREE.Color(el.color ?? '#7d7f73'), roughness: 0.95, metalness: 0, side: THREE.DoubleSide }))
+  mesh.castShadow = true; mesh.receiveShadow = true
+  group.add(mesh)
+  if (ring && ring.length > 1) {
+    const linePts = ring.map(([x, z]) => new THREE.Vector3(x, 0.03, z))
+    group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(linePts), new THREE.LineBasicMaterial({ color: 0x111111 })))
+  }
+}
+
 // Build geometry from a validated parametric spec (the AI/auto-generated massing).
 function buildFromSpec(spec: BuildingSpec): THREE.Object3D {
   const group = new THREE.Group()
   for (const el of spec.elements) {
+    if (el.kind === 'terrain') { buildTerrain(group, el); continue }
+    if (!el.pos) continue
     const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(el.color ?? '#1b1b1b'), roughness: 0.55, metalness: 0.05 })
     const [x, baseY, z] = el.pos
     if (el.kind === 'box' && el.size) {

@@ -29,6 +29,7 @@ export async function POST(req: Request) {
       condition: node.condition,
       nodeName: node.nodeName,
       description: node.description,
+      boundary: node.boundary,
     })
     await saveModelDraft(db, node.id, spec)
     return NextResponse.json({ data: { spec, engine }, error: null }, { status: 201 })

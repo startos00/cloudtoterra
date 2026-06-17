@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { BuildingSpecSchema, specFromNode, type BuildingSpec, type GenInput } from './model-spec'
+import { terrainElement } from './terrain'
 
 const MODEL = 'claude-sonnet-4-6'
 
@@ -49,7 +50,14 @@ Use a dark mass colour like #1b1b1b. Keep it to a clean massing (≤18 elements)
 
 // Generate a building spec from a node. Uses Claude when ANTHROPIC_API_KEY is set,
 // otherwise the deterministic generator (so it works offline / in local dev).
-export async function generateModelSpec(n: GenInput): Promise<{ spec: BuildingSpec; engine: 'llm' | 'deterministic' }> {
+export async function generateModelSpec(n: GenInput): Promise<{ spec: BuildingSpec; engine: 'llm' | 'deterministic' | 'terrain' }> {
+  // Land with a drawn boundary → real parcel topography (independent of the LLM).
+  if (n.type === 'land' && n.boundary) {
+    const terr = await terrainElement(n.boundary)
+    if (terr) {
+      return { spec: { summary: `Parcel topography for ${n.nodeName}`, elements: [terr], groundColor: '#e9e6dd' }, engine: 'terrain' }
+    }
+  }
   const key = process.env.ANTHROPIC_API_KEY
   if (!key) return { spec: specFromNode(n), engine: 'deterministic' }
   try {

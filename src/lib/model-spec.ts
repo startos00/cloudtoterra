@@ -7,12 +7,17 @@ import type { NodeType } from './taxonomy'
 const Vec3 = z.tuple([z.number(), z.number(), z.number()])
 
 export const ElementSchema = z.object({
-  kind: z.enum(['box', 'gable', 'cylinder']),
-  pos: Vec3,
+  kind: z.enum(['box', 'gable', 'cylinder', 'terrain']),
+  pos: Vec3.optional(),
   size: Vec3.optional(), // box/gable: [width, height, depth]
   radius: z.number().min(0.1).max(40).optional(), // cylinder
   height: z.number().min(0.1).max(120).optional(), // cylinder
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  // terrain: parcel topography (heightfield over the footprint, sampled from real elevation)
+  cols: z.number().int().min(2).max(48).optional(),
+  rows: z.number().int().min(2).max(48).optional(),
+  points: z.array(Vec3).max(2304).optional(), // grid points [x,y,z], row-major (rows × cols)
+  ring: z.array(z.tuple([z.number(), z.number()])).max(512).optional(), // footprint [x,z] for masking + outline
 })
 export type Element = z.infer<typeof ElementSchema>
 
@@ -30,6 +35,7 @@ export type GenInput = {
   condition: string | null
   nodeName: string
   description: string | null
+  boundary?: unknown // GeoJSON polygon (land) — drives parcel topography
 }
 
 const STOREY_H = 3.2
