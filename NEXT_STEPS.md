@@ -6,9 +6,9 @@ it's outward-facing, costs money, or requires your accounts. I deliberately did 
 
 ## Must do to go live  (each needs your accounts / payment — I can't do these for you)
 
-1. **Buy the domain `cloudtoterra.land`.** `.land` is sold by Cloudflare Registrar, Porkbun, and
-   Namecheap (~$25–35/yr). Cloudflare Registrar is at-cost with the easiest DNS. (Registration needs
-   your registrar account + card, so it's yours to do — takes ~5 min.)
+1. **Domain — DONE ✅** `cloudtoterra.com` is registered on Cloudflare. The app's
+   `NEXT_PUBLIC_APP_URL`, sitemap, and robots already point at it. Only remaining domain step is
+   attaching it to the Vercel project (step 8).
 
 2. **Push to GitHub** (public — it's AGPL); the repo is local-only right now:
    ```bash
@@ -40,10 +40,10 @@ it's outward-facing, costs money, or requires your accounts. I deliberately did 
 
 7. **Deploy to Vercel** (new project, separate from Nubis) with env vars:
    `DATABASE_URL`, `NEXT_PUBLIC_MAPBOX_TOKEN`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`,
-   `BLOB_READ_WRITE_TOKEN`, `NEXT_PUBLIC_BLOB_ENABLED=1`, `NEXT_PUBLIC_APP_URL=https://cloudtoterra.land`.
+   `BLOB_READ_WRITE_TOKEN`, `NEXT_PUBLIC_BLOB_ENABLED=1`, `NEXT_PUBLIC_APP_URL=https://cloudtoterra.com`.
    Deploy via **git push** (your memory note: the local `vercel` CLI gets SIGKILLed by the memory-monitor).
 
-8. **Attach the domain** in Vercel → Project → Domains → add `cloudtoterra.land`, then set the DNS
+8. **Attach the domain** in Vercel → Project → Domains → add `cloudtoterra.com`, then set the DNS
    records Vercel shows at your registrar (or point nameservers if using Cloudflare Registrar).
 
 ### Featured properties + 3D models

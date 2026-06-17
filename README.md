@@ -76,7 +76,7 @@ Anti-abuse: honeypot field, salted IP hash, per-IP rate window. Nothing is publi
 1. Create a Vercel project from this repo (own project, separate from Nubis).
 2. Set env vars: `NEXT_PUBLIC_MAPBOX_TOKEN`, `DATABASE_URL`, `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`.
 3. Provision a Neon Postgres DB; run `pnpm db:migrate` against it.
-4. Connect the domain **cloudtoterra.land**.
+4. Connect the domain **cloudtoterra.com**.
 
 ## License
 

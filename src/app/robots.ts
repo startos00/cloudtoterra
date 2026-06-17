@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.NEXT_PUBLIC_APP_URL || 'https://cloudtoterra.land'
+  const base = process.env.NEXT_PUBLIC_APP_URL || 'https://cloudtoterra.com'
   return {
     rules: { userAgent: '*', allow: '/', disallow: '/admin' },
     sitemap: `${base}/sitemap.xml`,
