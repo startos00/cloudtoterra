@@ -49,8 +49,9 @@ export function ArchiveLog() {
               A commons for the<br />ground that&rsquo;s waiting.
             </h1>
             <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-2">
-              CloudtoTerra, from cloud to land, is an open atlas of dormant, distressed, and underused
-              urban assets: land, buildings, civic places, and the societies forming to reactivate them.
+              CloudtoTerra, from cloud to land, is an open atlas of dormant, distressed, or simply
+              underappreciated ground: land, buildings, civic places, and the online societies forming
+              in the cloud to activate them on the land.
             </p>
             <div className="mt-6 flex gap-2">
               <Link href="/map" className="btn-ink">Open the map</Link>
@@ -156,6 +157,10 @@ export function ArchiveLog() {
                   <svg viewBox="0 0 100 100" className="relative z-[2] h-2/5 w-2/5 text-ink transition-transform duration-300 group-hover:scale-110">{f.icon}</svg>
                 </div>
                 <span className="text-[9px] font-medium text-ink-2">{f.label}</span>
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] translate-y-1 bg-[#F4F4F2]/95 px-4 pb-3 pt-2 opacity-0 backdrop-blur-sm transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                  <span className="text-[9px] font-medium">{f.label}</span>
+                  <p className="mt-0.5 text-[10px] leading-snug text-ink-2">{f.blurb}</p>
+                </div>
               </article>
             ))}
           </div>

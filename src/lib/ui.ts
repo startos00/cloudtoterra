@@ -45,6 +45,7 @@ export type PublicNode = {
   country: string | null
 }
 
+const SUB_ACRONYMS = new Set(['sez', 'dao', 'id'])
 export function prettySub(sub: string): string {
-  return sub.replaceAll('_', ' ')
+  return sub.split('_').map((w) => (SUB_ACRONYMS.has(w) ? w.toUpperCase() : w)).join(' ')
 }
