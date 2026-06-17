@@ -32,21 +32,27 @@ function getDb(): DrizzleDb {
     return _db
   }
   // ── Dev fallback ──────────────────────────────────────────────────────────
-  // No DATABASE_URL → spin up an in-process, file-backed Postgres (PGlite) so the
-  // app is fully usable locally (submit → admin approve → render) without Neon.
-  // Loaded via createRequire so PGlite never enters the production bundle; prod
-  // always has DATABASE_URL and uses the Neon HTTP driver above.
+  // No DATABASE_URL → spin up an in-process Postgres (PGlite) so the app is fully
+  // usable locally (submit → admin approve → render) without Neon. In-memory (not
+  // file-backed): avoids WASM file-lock crashes under dev HMR; data resets when the
+  // dev server restarts, which is fine for a local stand-in. Loaded via createRequire
+  // so PGlite never enters the production bundle; prod always has DATABASE_URL.
   if (process.env.NODE_ENV === 'production') {
     throw new Error('DATABASE_URL is required in production')
   }
+  // Cache on globalThis: Next dev evaluates this module in multiple bundles (route
+  // handlers vs server components). Without a process-global the page would read a
+  // different empty in-memory DB than the API wrote to.
+  const g = globalThis as unknown as { __cttDevDb?: DrizzleDb }
+  if (g.__cttDevDb) { _db = g.__cttDevDb; return _db }
   const nodeRequire = createRequire(import.meta.url)
   const { PGlite } = nodeRequire('@electric-sql/pglite')
   const { drizzle: pgliteDrizzle } = nodeRequire('drizzle-orm/pglite')
-  const dataDir = nodeRequire('node:path').join(process.cwd(), '.pglite-dev')
-  const client = new PGlite(dataDir)
+  const client = new PGlite()
   // FIFO: this DDL is queued before any query a caller issues afterwards.
   void client.exec(DEV_DDL)
   _db = pgliteDrizzle(client, { schema }) as unknown as DrizzleDb
+  g.__cttDevDb = _db
   return _db
 }
 
