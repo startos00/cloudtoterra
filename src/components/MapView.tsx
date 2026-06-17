@@ -129,8 +129,10 @@ export function MapView() {
       const ring = poly.geometry.coordinates[0] as [number, number][]
       const c = centroid(ring)
       setDraft({ type: 'land', lat: c[1], lng: c[0], boundary: poly.geometry })
+      // Don't remove the Draw control here — doing so mid-event leaves trailing
+      // mapbox-gl-draw handlers pointing at a detached map (the "dragPan of null"
+      // crash). setAddType(null) re-runs this effect, whose cleanup removes it safely.
       setAddType(null)
-      cleanupDraw()
     }
     if (addType === 'land') {
       const draw = new MapboxDraw({ displayControlsDefault: false, controls: { polygon: true, trash: true }, defaultMode: 'draw_polygon' })

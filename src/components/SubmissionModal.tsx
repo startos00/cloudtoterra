@@ -110,7 +110,7 @@ export function SubmissionModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="submit-title"
-        className="w-[min(92vw,460px)] rounded border border-line-strong bg-paper p-5 shadow-xl"
+        className="max-h-[90dvh] w-[min(92vw,460px)] overflow-y-auto rounded border border-line-strong bg-paper p-5 shadow-xl"
       >
         <p className="label flex items-center gap-2">
           <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: `var(--color-${type})` }} aria-hidden />

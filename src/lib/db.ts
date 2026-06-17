@@ -1,20 +1,57 @@
 import { drizzle, type NeonHttpDatabase } from 'drizzle-orm/neon-http'
 import { neon } from '@neondatabase/serverless'
+import { createRequire } from 'node:module'
 import * as schema from './schema'
 
 // Shared DB type used across data-access fns. Tests pass a pglite db cast to this
 // (same drizzle query API), so call-sites stay strongly typed without `any`.
 export type Db = NeonHttpDatabase<typeof schema>
 
-// Lazy: don't require DATABASE_URL until the first query (keeps build/import safe).
-let _db: ReturnType<typeof drizzle<typeof schema>> | undefined
-function getDb() {
-  if (!_db) _db = drizzle(neon(process.env.DATABASE_URL!), { schema })
+type DrizzleDb = ReturnType<typeof drizzle<typeof schema>>
+
+// Schema for the dev fallback DB (mirrors schema.ts / the migrations).
+const DEV_DDL = `
+CREATE TABLE IF NOT EXISTS nodes (
+  id uuid primary key default gen_random_uuid(),
+  type text not null, sub_type text not null, condition text,
+  node_name text not null, description text, photo_urls text[],
+  latitude double precision not null, longitude double precision not null,
+  boundary jsonb, country text, city text, society_tags text[], attributes jsonb,
+  status text not null default 'pending', is_visible boolean not null default false,
+  ip_hash varchar(64), contributor_email text, source text default 'crowd',
+  created_at timestamptz default now(), approved_at timestamptz
+);`
+
+let _db: DrizzleDb | undefined
+
+function getDb(): DrizzleDb {
+  if (_db) return _db
+  const url = process.env.DATABASE_URL
+  if (url) {
+    _db = drizzle(neon(url), { schema })
+    return _db
+  }
+  // ── Dev fallback ──────────────────────────────────────────────────────────
+  // No DATABASE_URL → spin up an in-process, file-backed Postgres (PGlite) so the
+  // app is fully usable locally (submit → admin approve → render) without Neon.
+  // Loaded via createRequire so PGlite never enters the production bundle; prod
+  // always has DATABASE_URL and uses the Neon HTTP driver above.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('DATABASE_URL is required in production')
+  }
+  const nodeRequire = createRequire(import.meta.url)
+  const { PGlite } = nodeRequire('@electric-sql/pglite')
+  const { drizzle: pgliteDrizzle } = nodeRequire('drizzle-orm/pglite')
+  const dataDir = nodeRequire('node:path').join(process.cwd(), '.pglite-dev')
+  const client = new PGlite(dataDir)
+  // FIFO: this DDL is queued before any query a caller issues afterwards.
+  void client.exec(DEV_DDL)
+  _db = pgliteDrizzle(client, { schema }) as unknown as DrizzleDb
   return _db
 }
 
 // Proxy so existing `import { db }` call-sites work unchanged; methods stay bound.
-export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+export const db = new Proxy({} as DrizzleDb, {
   get(_t, prop) {
     const real = getDb() as unknown as Record<string | symbol, unknown>
     const v = real[prop]
