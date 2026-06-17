@@ -103,7 +103,29 @@ input[type=range]::-moz-range-thumb { height: 12px; width: 6px; border: 0; borde
 @keyframes ctt-orb { 0% { transform: scale(1) translate(0,0); opacity: 0.85; } 100% { transform: scale(1.12) translate(-4%, 5%); opacity: 1; } }
 .orb { filter: blur(70px); animation: ctt-orb 12s infinite alternate ease-in-out; }
 
-@media (prefers-reduced-motion: reduce) { .rise, .orb { animation: none; } }
+/* archive ambient orb (/places) — large fixed breathing + drifting bloom */
+.ambient-canvas { position: fixed; top: 3rem; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.archive-orb {
+  position: absolute; top: 42%; left: 58%;
+  width: 85vw; height: 85vw; max-width: 1100px; max-height: 1100px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 30% 30%, #FFD600 0%, #FF8A00 38%, #B882FF 72%, transparent 100%);
+  filter: blur(100px); opacity: 0.95; border-radius: 50%;
+  animation: ctt-breathe 25s ease-in-out infinite alternate, ctt-drift 40s linear infinite;
+}
+@keyframes ctt-breathe { 0% { transform: translate(-50%,-50%) scale(1); opacity: 0.8; } 100% { transform: translate(-50%,-50%) scale(1.1); opacity: 0.95; } }
+@keyframes ctt-drift { 0% { top: 40%; left: 60%; } 33% { top: 50%; left: 65%; } 66% { top: 45%; left: 55%; } 100% { top: 40%; left: 60%; } }
+
+/* journal-archive card (/places) — glass tile, hover lift */
+.archive-card {
+  aspect-ratio: 3 / 4; display: flex; flex-direction: column;
+  background: rgba(243, 243, 241, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  text-decoration: none; color: inherit;
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s, background 0.3s;
+}
+.archive-card:hover { position: relative; z-index: 2; background: #f3f3f1; transform: scale(1.02); box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05); }
+
+@media (prefers-reduced-motion: reduce) { .rise, .orb, .archive-orb { animation: none; } .archive-card { transition: none; } }
 
 /* mapbox plates */
 .mapboxgl-popup-content { font-family: var(--font-sans); font-size: 13px; padding: 12px 14px; background: #fff; color: #000; border: 1px solid #000; border-radius: 0; }
