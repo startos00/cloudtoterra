@@ -1,5 +1,5 @@
-import { FieldStage } from '@/components/FieldStage'
+import { ArchiveLog } from '@/components/ArchiveLog'
 
 export default function Home() {
-  return <FieldStage />
+  return <ArchiveLog />
 }

@@ -20,7 +20,7 @@
   --color-ember: #2c52ff;
   --color-danger: #000000;
 
-  --font-sans: "Helvetica Neue", Helvetica, Arial, "Segoe UI", sans-serif;
+  --font-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-serif: Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
   --font-display: var(--font-sans);
@@ -98,7 +98,12 @@ input[type=range]::-moz-range-thumb { height: 12px; width: 6px; border: 0; borde
 
 @keyframes ctt-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .rise { animation: ctt-rise 480ms cubic-bezier(0.16,1,0.3,1) both; }
-@media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
+
+/* hero orb — slow blurred gradient bloom */
+@keyframes ctt-orb { 0% { transform: scale(1) translate(0,0); opacity: 0.85; } 100% { transform: scale(1.12) translate(-4%, 5%); opacity: 1; } }
+.orb { filter: blur(70px); animation: ctt-orb 12s infinite alternate ease-in-out; }
+
+@media (prefers-reduced-motion: reduce) { .rise, .orb { animation: none; } }
 
 /* mapbox plates */
 .mapboxgl-popup-content { font-family: var(--font-sans); font-size: 13px; padding: 12px 14px; background: #fff; color: #000; border: 1px solid #000; border-radius: 0; }
