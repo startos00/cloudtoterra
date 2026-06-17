@@ -22,6 +22,8 @@ export const nodes = pgTable('nodes', {
   ipHash: varchar('ip_hash', { length: 64 }),
   contributorEmail: text('contributor_email'),
   source: text('source').default('crowd'),
+  model3dUrl: text('model_3d_url'), // optional GLB/GLTF for the 3D record view
+  featured: boolean('featured').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   approvedAt: timestamp('approved_at', { withTimezone: true }),
 }, (t) => [

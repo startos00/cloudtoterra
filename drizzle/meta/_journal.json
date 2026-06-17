@@ -8,6 +8,13 @@
       "when": 1781544601042,
       "tag": "0000_melted_maggott",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781687508637,
+      "tag": "0001_chilly_whizzer",
+      "breakpoints": true
     }
   ]
 }

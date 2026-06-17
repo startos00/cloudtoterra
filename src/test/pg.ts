@@ -35,6 +35,8 @@ export async function makeTestDb() {
       ip_hash varchar(64),
       contributor_email text,
       source text default 'crowd',
+      model_3d_url text,
+      featured boolean not null default false,
       created_at timestamptz default now(),
       approved_at timestamptz
     );

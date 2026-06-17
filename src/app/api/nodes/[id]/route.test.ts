@@ -33,6 +33,25 @@ describe('PATCH /api/nodes/[id]', () => {
     expect((await res.json()).data.isVisible).toBe(true)
   })
 
+  it('admin can attach a 3D model + feature on approve', async () => {
+    const n = await createNode(testDb, {
+      type: 'building', subType: 'commercial_office', nodeName: 'M', latitude: 1, longitude: 1,
+    })
+    const { PATCH } = await import('./route')
+    const res = await PATCH(
+      adminReq(`http://x/api/nodes/${n.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'approved', model3dUrl: 'https://blob.example/m.glb', featured: true }),
+      }),
+      { params: Promise.resolve({ id: n.id }) },
+    )
+    expect(res.status).toBe(200)
+    const data = (await res.json()).data
+    expect(data.model3dUrl).toBe('https://blob.example/m.glb')
+    expect(data.featured).toBe(true)
+    expect(data.isVisible).toBe(true)
+  })
+
   it('non-admin is 401', async () => {
     const n = await createNode(testDb, {
       type: 'building', subType: 'commercial_office', nodeName: 'M', latitude: 1, longitude: 1,

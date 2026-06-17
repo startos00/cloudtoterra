@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS nodes (
   boundary jsonb, country text, city text, society_tags text[], attributes jsonb,
   status text not null default 'pending', is_visible boolean not null default false,
   ip_hash varchar(64), contributor_email text, source text default 'crowd',
+  model_3d_url text, featured boolean not null default false,
   created_at timestamptz default now(), approved_at timestamptz
 );`
 

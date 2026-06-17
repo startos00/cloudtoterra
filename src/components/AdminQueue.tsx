@@ -20,13 +20,25 @@ type Item = {
 export function AdminQueue({ initial }: { initial: Item[] }) {
   const [items, setItems] = useState<Item[]>(initial)
   const [busy, setBusy] = useState<string | null>(null)
+  const [cur, setCur] = useState<Record<string, { model3dUrl: string; featured: boolean }>>({})
+
+  function curOf(id: string) { return cur[id] ?? { model3dUrl: '', featured: false } }
+  function setCurOf(id: string, patch: Partial<{ model3dUrl: string; featured: boolean }>) {
+    setCur((c) => ({ ...c, [id]: { ...curOf(id), ...patch } }))
+  }
 
   async function act(id: string, status: 'approved' | 'rejected') {
     setBusy(id)
+    const c = curOf(id)
+    const body: { status: string; model3dUrl?: string; featured?: boolean } = { status }
+    if (status === 'approved') {
+      if (c.model3dUrl.trim()) body.model3dUrl = c.model3dUrl.trim()
+      if (c.featured) body.featured = true
+    }
     const res = await fetch(`/api/nodes/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify(body),
     })
     setBusy(null)
     if (res.ok) setItems((xs) => xs.filter((x) => x.id !== id))
@@ -67,6 +79,18 @@ export function AdminQueue({ initial }: { initial: Item[] }) {
                     ))}
                   </div>
                 )}
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <input
+                    value={curOf(n.id).model3dUrl}
+                    onChange={(e) => setCurOf(n.id, { model3dUrl: e.target.value })}
+                    placeholder="3D model URL (.glb) — optional"
+                    className="w-full rounded border border-line bg-paper p-1.5 text-xs sm:max-w-xs"
+                  />
+                  <label className="flex shrink-0 items-center gap-1.5 text-sm">
+                    <input type="checkbox" checked={curOf(n.id).featured} onChange={(e) => setCurOf(n.id, { featured: e.target.checked })} />
+                    Featured
+                  </label>
+                </div>
                 <a
                   className="label mt-2 inline-block normal-case tracking-wide text-ink-3 hover:text-ember"
                   style={{ textTransform: 'none' }}

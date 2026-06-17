@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { getNode, setStatus } from '@/lib/nodes'
+import { getNode, setStatus, updateCuration } from '@/lib/nodes'
 import { verifyToken, ADMIN_COOKIE } from '@/lib/admin-auth'
 
 async function isAdmin(req: Request): Promise<boolean> {
@@ -32,7 +32,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   return NextResponse.json({ data: row, error: null })
 }
 
-const patchSchema = z.object({ status: z.enum(['approved', 'rejected', 'pending']) })
+const patchSchema = z.object({
+  status: z.enum(['approved', 'rejected', 'pending']),
+  // optional admin curation applied alongside the status change
+  model3dUrl: z.string().url().nullable().optional(),
+  featured: z.boolean().optional(),
+})
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAdmin(req))) {
@@ -44,7 +49,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!parsed.success) {
     return NextResponse.json({ data: null, error: 'invalid' }, { status: 400 })
   }
-  await setStatus(db, id, parsed.data.status)
+  const { status, model3dUrl, featured } = parsed.data
+  if (model3dUrl !== undefined || featured !== undefined) {
+    await updateCuration(db, id, { model3dUrl, featured })
+  }
+  await setStatus(db, id, status)
   const row = await getNode(db, id)
   return NextResponse.json({ data: row, error: null })
 }
