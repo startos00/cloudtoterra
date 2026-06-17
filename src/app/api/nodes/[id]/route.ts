@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { getNode, setStatus, updateCuration } from '@/lib/nodes'
+import { isAcceptablePhoto } from '@/lib/validation'
 import { verifyToken, ADMIN_COOKIE } from '@/lib/admin-auth'
 
 async function isAdmin(req: Request): Promise<boolean> {
@@ -38,6 +39,7 @@ const patchSchema = z.object({
   model3dUrl: z.string().url().nullable().optional(),
   featured: z.boolean().optional(),
   modelStatus: z.enum(['none', 'draft', 'approved']).optional(), // publish/discard a generated draft
+  photoUrls: z.array(z.string().refine(isAcceptablePhoto, 'unsupported image')).max(6).optional(),
 })
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -50,9 +52,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!parsed.success) {
     return NextResponse.json({ data: null, error: 'invalid' }, { status: 400 })
   }
-  const { status, model3dUrl, featured, modelStatus } = parsed.data
-  if (model3dUrl !== undefined || featured !== undefined || modelStatus !== undefined) {
-    await updateCuration(db, id, { model3dUrl, featured, modelStatus })
+  const { status, model3dUrl, featured, modelStatus, photoUrls } = parsed.data
+  if (model3dUrl !== undefined || featured !== undefined || modelStatus !== undefined || photoUrls !== undefined) {
+    await updateCuration(db, id, { model3dUrl, featured, modelStatus, photoUrls })
   }
   await setStatus(db, id, status)
   const row = await getNode(db, id)

@@ -65,12 +65,13 @@ export async function setStatus(
 export async function updateCuration(
   db: Db,
   id: string,
-  fields: { model3dUrl?: string | null; featured?: boolean; modelStatus?: 'none' | 'draft' | 'approved' },
+  fields: { model3dUrl?: string | null; featured?: boolean; modelStatus?: 'none' | 'draft' | 'approved'; photoUrls?: string[] },
 ): Promise<void> {
   const set: Partial<NewNode> = {}
   if (fields.model3dUrl !== undefined) set.model3dUrl = fields.model3dUrl
   if (fields.featured !== undefined) set.featured = fields.featured
   if (fields.modelStatus !== undefined) set.modelStatus = fields.modelStatus
+  if (fields.photoUrls !== undefined) set.photoUrls = fields.photoUrls
   if (Object.keys(set).length === 0) return
   await db.update(nodes).set(set).where(eq(nodes.id, id))
 }
