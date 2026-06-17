@@ -1,11 +1,34 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { upload } from '@vercel/blob/client'
 import { SUB_TYPES, CONDITIONS, type NodeType } from '@/lib/taxonomy'
 import { TYPE_LABELS, prettySub } from '@/lib/ui'
-import { fileToDownscaledDataUrl } from '@/lib/image'
+import { fileToDownscaledDataUrl, fileToDownscaledBlob } from '@/lib/image'
 
 const MAX_PHOTOS = 6
+// When a Blob store is wired (prod), upload photos to object storage; otherwise
+// fall back to inline base64 so local dev works with no external service.
+const BLOB_ENABLED = process.env.NEXT_PUBLIC_BLOB_ENABLED === '1'
+
+// Returns a stored photo reference: a Blob https URL (preferred) or an inline
+// data URL fallback. Both are accepted by the submission validator.
+async function storePhoto(file: File): Promise<string> {
+  if (BLOB_ENABLED) {
+    try {
+      const blob = await fileToDownscaledBlob(file)
+      const res = await upload(`property/${Date.now()}-${Math.round(Math.random() * 1e6)}.jpg`, blob, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+        contentType: 'image/jpeg',
+      })
+      return res.url
+    } catch {
+      // Blob misconfigured / offline → fall through to inline storage.
+    }
+  }
+  return fileToDownscaledDataUrl(file)
+}
 
 const fieldCls = 'mt-1 w-full rounded border border-line bg-paper p-2 text-ink'
 
@@ -63,7 +86,7 @@ export function SubmissionModal({
       const room = MAX_PHOTOS - photos.length
       const encoded: string[] = []
       for (const f of imgs.slice(0, room)) {
-        try { encoded.push(await fileToDownscaledDataUrl(f)) } catch { /* skip undecodable */ }
+        try { encoded.push(await storePhoto(f)) } catch { /* skip undecodable */ }
       }
       if (encoded.length) setPhotos((p) => [...p, ...encoded].slice(0, MAX_PHOTOS))
       if (all.length > imgs.length) setPhotoNote('Skipped non-image files.')
