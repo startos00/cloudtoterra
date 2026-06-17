@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import type { NodeType } from '@/lib/taxonomy'
+import type { BuildingSpec } from '@/lib/model-spec'
 
 type Ring = [number, number][]
 
@@ -91,9 +92,40 @@ function buildMassing(kind: NodeType, boundary: unknown): THREE.Object3D {
   return group
 }
 
-export function ModelViewer({ modelUrl, kind, boundary }: { modelUrl?: string | null; kind: NodeType; boundary?: unknown }) {
+// Build geometry from a validated parametric spec (the AI/auto-generated massing).
+function buildFromSpec(spec: BuildingSpec): THREE.Object3D {
+  const group = new THREE.Group()
+  for (const el of spec.elements) {
+    const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(el.color ?? '#1b1b1b'), roughness: 0.55, metalness: 0.05 })
+    const [x, baseY, z] = el.pos
+    if (el.kind === 'box' && el.size) {
+      const [w, hh, d] = el.size
+      const geo = new THREE.BoxGeometry(w, hh, d)
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.position.set(x, baseY + hh / 2, z); mesh.castShadow = true; mesh.receiveShadow = true
+      group.add(mesh)
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 }))
+      edges.position.copy(mesh.position)
+      group.add(edges)
+    } else if (el.kind === 'gable' && el.size) {
+      const [w, hh, d] = el.size
+      const shape = new THREE.Shape(); shape.moveTo(-w / 2, 0); shape.lineTo(w / 2, 0); shape.lineTo(0, hh); shape.closePath()
+      const geo = new THREE.ExtrudeGeometry(shape, { depth: d, bevelEnabled: false }); geo.translate(0, 0, -d / 2)
+      const mesh = new THREE.Mesh(geo, mat)
+      mesh.position.set(x, baseY, z); mesh.castShadow = true; mesh.receiveShadow = true
+      group.add(mesh)
+    } else if (el.kind === 'cylinder' && el.radius && el.height) {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(el.radius, el.radius, el.height, 28), mat)
+      mesh.position.set(x, baseY + el.height / 2, z); mesh.castShadow = true; mesh.receiveShadow = true
+      group.add(mesh)
+    }
+  }
+  return group
+}
+
+export function ModelViewer({ modelUrl, kind, boundary, spec }: { modelUrl?: string | null; kind: NodeType; boundary?: unknown; spec?: BuildingSpec | null }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [status, setStatus] = useState<'loading' | 'model' | 'massing' | 'error'>('loading')
+  const [status, setStatus] = useState<'loading' | 'model' | 'massing' | 'generated' | 'error'>('loading')
 
   useEffect(() => {
     const mount = ref.current
@@ -158,6 +190,10 @@ export function ModelViewer({ modelUrl, kind, boundary }: { modelUrl?: string | 
         undefined,
         () => { if (!disposed) { const m = buildMassing(kind, boundary); scene.add(m); frame(m); setStatus('error') } },
       )
+    } else if (spec) {
+      const m = buildFromSpec(spec); scene.add(m); frame(m)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStatus('generated')
     } else {
       const m = buildMassing(kind, boundary); scene.add(m); frame(m); setStatus('massing')
     }
@@ -176,13 +212,14 @@ export function ModelViewer({ modelUrl, kind, boundary }: { modelUrl?: string | 
       disposed = true; cancelAnimationFrame(raf); ro.disconnect(); controls.dispose()
       renderer.dispose(); mount.removeChild(renderer.domElement)
     }
-  }, [modelUrl, kind, boundary])
+  }, [modelUrl, kind, boundary, spec])
 
   return (
     <div className="relative h-full w-full">
       <div ref={ref} className="h-full w-full" />
       <div className="pointer-events-none absolute bottom-3 left-3 text-[8px] uppercase tracking-[0.1em] text-ink-3">
         {status === 'model' ? 'Render: uploaded model · drag to orbit'
+          : status === 'generated' ? 'Render: generated massing · drag to orbit'
           : status === 'massing' ? 'Render: procedural massing · drag to orbit'
           : status === 'error' ? 'Model failed · showing massing'
           : 'Loading…'}

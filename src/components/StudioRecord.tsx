@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ModelViewer } from './ModelViewer'
 import { TYPE_LABELS, TYPE_LETTER, prettySub } from '@/lib/ui'
 import type { NodeType } from '@/lib/taxonomy'
+import type { BuildingSpec } from '@/lib/model-spec'
 
 export type RecordNode = {
   id: string
@@ -20,6 +21,8 @@ export type RecordNode = {
   photoUrls: string[] | null
   model3dUrl: string | null
   featured: boolean
+  modelSpec: BuildingSpec | null
+  modelStatus: string
   source: string | null
   boundary: unknown
   createdAt: string | null
@@ -55,7 +58,10 @@ export function StudioRecord({ node }: { node: RecordNode }) {
   const [view, setView] = useState<'model' | 'photos'>(node.model3dUrl ? 'model' : hasPhotos ? 'photos' : 'model')
   const [photoIdx, setPhotoIdx] = useState(0)
   const ref = `FIG. ${node.id.slice(0, 6).toUpperCase()}`
-  const provenance = node.model3dUrl ? (node.featured ? 'Curated model' : 'Uploaded model') : 'Procedural massing'
+  const approvedSpec = node.modelStatus === 'approved' ? node.modelSpec : null
+  const provenance = node.model3dUrl
+    ? (node.featured ? 'Curated model' : 'Uploaded model')
+    : approvedSpec ? 'Generated model' : 'Procedural massing'
 
   return (
     <div className="grid h-[calc(100dvh-3rem)] grid-cols-[52px_1fr] bg-[#F4F4F2] text-ink">
@@ -115,7 +121,7 @@ export function StudioRecord({ node }: { node: RecordNode }) {
               />
               {view === 'model' ? (
                 <div className="relative aspect-square w-full max-w-[560px] border border-ink/15 bg-[#F4F4F2] shadow-[0_30px_80px_rgba(0,0,0,0.06)]">
-                  <ModelViewer modelUrl={node.model3dUrl} kind={node.type} boundary={node.boundary} />
+                  <ModelViewer modelUrl={node.model3dUrl} kind={node.type} boundary={node.boundary} spec={approvedSpec} />
                 </div>
               ) : (
                 <div className="relative z-10 w-full max-w-[560px]">

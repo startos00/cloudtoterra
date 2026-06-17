@@ -37,6 +37,8 @@ export async function makeTestDb() {
       source text default 'crowd',
       model_3d_url text,
       featured boolean not null default false,
+      model_spec jsonb,
+      model_status text not null default 'none',
       created_at timestamptz default now(),
       approved_at timestamptz
     );

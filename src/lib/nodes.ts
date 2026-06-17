@@ -61,15 +61,21 @@ export async function setStatus(
     .where(eq(nodes.id, id))
 }
 
-// Admin-only curation: attach a hand-made / approved 3D model and/or feature a node.
+// Admin-only curation: attach a hand-made model, feature a node, publish/discard a draft.
 export async function updateCuration(
   db: Db,
   id: string,
-  fields: { model3dUrl?: string | null; featured?: boolean },
+  fields: { model3dUrl?: string | null; featured?: boolean; modelStatus?: 'none' | 'draft' | 'approved' },
 ): Promise<void> {
   const set: Partial<NewNode> = {}
   if (fields.model3dUrl !== undefined) set.model3dUrl = fields.model3dUrl
   if (fields.featured !== undefined) set.featured = fields.featured
+  if (fields.modelStatus !== undefined) set.modelStatus = fields.modelStatus
   if (Object.keys(set).length === 0) return
   await db.update(nodes).set(set).where(eq(nodes.id, id))
+}
+
+// Save an AI/auto-generated massing as a draft for admin review.
+export async function saveModelDraft(db: Db, id: string, spec: unknown): Promise<void> {
+  await db.update(nodes).set({ modelSpec: spec as NewNode['modelSpec'], modelStatus: 'draft' }).where(eq(nodes.id, id))
 }

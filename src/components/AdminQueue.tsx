@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { TYPE_LABELS, prettySub } from '@/lib/ui'
 import type { NodeType } from '@/lib/taxonomy'
+import type { BuildingSpec } from '@/lib/model-spec'
+import { ModelViewer } from './ModelViewer'
 
 type Item = {
   id: string
@@ -20,20 +22,39 @@ type Item = {
 export function AdminQueue({ initial }: { initial: Item[] }) {
   const [items, setItems] = useState<Item[]>(initial)
   const [busy, setBusy] = useState<string | null>(null)
-  const [cur, setCur] = useState<Record<string, { model3dUrl: string; featured: boolean }>>({})
+  const [genBusy, setGenBusy] = useState<string | null>(null)
+  const [drafts, setDrafts] = useState<Record<string, { spec: BuildingSpec; engine: string }>>({})
+  const [cur, setCur] = useState<Record<string, { model3dUrl: string; featured: boolean; publishModel: boolean }>>({})
 
-  function curOf(id: string) { return cur[id] ?? { model3dUrl: '', featured: false } }
-  function setCurOf(id: string, patch: Partial<{ model3dUrl: string; featured: boolean }>) {
+  function curOf(id: string) { return cur[id] ?? { model3dUrl: '', featured: false, publishModel: false } }
+  function setCurOf(id: string, patch: Partial<{ model3dUrl: string; featured: boolean; publishModel: boolean }>) {
     setCur((c) => ({ ...c, [id]: { ...curOf(id), ...patch } }))
+  }
+
+  async function generate(id: string) {
+    setGenBusy(id)
+    try {
+      const res = await fetch('/api/generate-model', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
+      })
+      if (res.ok) {
+        const { data } = await res.json()
+        setDrafts((d) => ({ ...d, [id]: data }))
+        setCurOf(id, { publishModel: true })
+      }
+    } finally {
+      setGenBusy(null)
+    }
   }
 
   async function act(id: string, status: 'approved' | 'rejected') {
     setBusy(id)
     const c = curOf(id)
-    const body: { status: string; model3dUrl?: string; featured?: boolean } = { status }
+    const body: { status: string; model3dUrl?: string; featured?: boolean; modelStatus?: string } = { status }
     if (status === 'approved') {
       if (c.model3dUrl.trim()) body.model3dUrl = c.model3dUrl.trim()
       if (c.featured) body.featured = true
+      if (drafts[id] && c.publishModel) body.modelStatus = 'approved'
     }
     const res = await fetch(`/api/nodes/${id}`, {
       method: 'PATCH',
@@ -90,6 +111,26 @@ export function AdminQueue({ initial }: { initial: Item[] }) {
                     <input type="checkbox" checked={curOf(n.id).featured} onChange={(e) => setCurOf(n.id, { featured: e.target.checked })} />
                     Featured
                   </label>
+                </div>
+                <div className="mt-3">
+                  <button onClick={() => generate(n.id)} disabled={genBusy === n.id} className="btn-ghost text-xs disabled:opacity-50">
+                    {genBusy === n.id ? 'Generating 3D…' : drafts[n.id] ? 'Regenerate 3D draft' : 'Generate 3D draft'}
+                  </button>
+                  {drafts[n.id] && (
+                    <div className="mt-2 rounded border border-line p-2">
+                      <div className="flex items-center justify-between">
+                        <span className="meta" style={{ textTransform: 'none' }}>3D draft · {drafts[n.id].engine}</span>
+                        <label className="flex items-center gap-1.5 text-xs">
+                          <input type="checkbox" checked={curOf(n.id).publishModel} onChange={(e) => setCurOf(n.id, { publishModel: e.target.checked })} />
+                          Publish on approve
+                        </label>
+                      </div>
+                      <div className="mt-2 h-48 w-full overflow-hidden rounded border border-line">
+                        <ModelViewer kind={n.type} spec={drafts[n.id].spec} />
+                      </div>
+                      <p className="mt-1 text-[11px] text-ink-3">{drafts[n.id].spec.summary}</p>
+                    </div>
+                  )}
                 </div>
                 <a
                   className="label mt-2 inline-block normal-case tracking-wide text-ink-3 hover:text-ember"

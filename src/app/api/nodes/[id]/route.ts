@@ -37,6 +37,7 @@ const patchSchema = z.object({
   // optional admin curation applied alongside the status change
   model3dUrl: z.string().url().nullable().optional(),
   featured: z.boolean().optional(),
+  modelStatus: z.enum(['none', 'draft', 'approved']).optional(), // publish/discard a generated draft
 })
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -49,9 +50,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!parsed.success) {
     return NextResponse.json({ data: null, error: 'invalid' }, { status: 400 })
   }
-  const { status, model3dUrl, featured } = parsed.data
-  if (model3dUrl !== undefined || featured !== undefined) {
-    await updateCuration(db, id, { model3dUrl, featured })
+  const { status, model3dUrl, featured, modelStatus } = parsed.data
+  if (model3dUrl !== undefined || featured !== undefined || modelStatus !== undefined) {
+    await updateCuration(db, id, { model3dUrl, featured, modelStatus })
   }
   await setStatus(db, id, status)
   const row = await getNode(db, id)

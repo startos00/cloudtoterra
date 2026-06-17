@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS nodes (
   status text not null default 'pending', is_visible boolean not null default false,
   ip_hash varchar(64), contributor_email text, source text default 'crowd',
   model_3d_url text, featured boolean not null default false,
+  model_spec jsonb, model_status text not null default 'none',
   created_at timestamptz default now(), approved_at timestamptz
 );`
 

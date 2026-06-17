@@ -43,6 +43,8 @@ export default async function NodePage({ params }: { params: Promise<{ id: strin
     photoUrls: node.photoUrls,
     model3dUrl: node.model3dUrl,
     featured: node.featured,
+    modelSpec: (node.modelSpec as RecordNode['modelSpec']) ?? null,
+    modelStatus: node.modelStatus,
     source: node.source,
     boundary: node.boundary,
     createdAt: node.createdAt ? node.createdAt.toISOString() : null,

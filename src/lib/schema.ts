@@ -24,6 +24,8 @@ export const nodes = pgTable('nodes', {
   source: text('source').default('crowd'),
   model3dUrl: text('model_3d_url'), // optional GLB/GLTF for the 3D record view
   featured: boolean('featured').notNull().default(false),
+  modelSpec: jsonb('model_spec'), // AI/auto-generated parametric massing spec
+  modelStatus: text('model_status').notNull().default('none'), // none | draft | approved
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   approvedAt: timestamp('approved_at', { withTimezone: true }),
 }, (t) => [
